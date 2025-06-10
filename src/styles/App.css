@@ -1,0 +1,172 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-yellow: #FFD700;
+  --dark-bg: #0A0A0A;
+  --white: #FFFFFF;
+  --gray: #333333;
+  --light-gray: #666666;
+  --font-primary: 'Geologica', sans-serif;
+  --font-script: 'Pacifico', cursive;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--dark-bg);
+  color: var(--white);
+  line-height: 1.6;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
+}
+
+.App {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.section {
+  min-height: 100vh;
+  padding: 2rem 0;
+  position: relative;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 3rem;
+  color: var(--primary-yellow);
+}
+
+.btn-primary {
+  background: var(--primary-yellow);
+  color: var(--dark-bg);
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3);
+}
+
+.fade-in {
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 2rem;
+  }
+  
+  .section {
+    padding: 4rem 0;
+  }
+  
+  .section-title {
+    font-size: 3.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-title {
+    font-size: 4rem;
+  }
+}
+
+/* ===== ADDITIONAL MOBILE FIXES ===== */
+
+/* Prevent horizontal scrolling on small screens */
+@media (max-width: 768px) {
+  * {
+    max-width: 100vw !important;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+  
+  .container {
+    padding: 0 0.75rem !important;
+    margin: 0 auto;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Prevent text overflow */
+  h1, h2, h3, h4, h5, h6, p, span, div {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto;
+  }
+  
+  /* Ensure images don't cause overflow */
+  img, video, iframe {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Fix for absolute positioned elements */
+  .header-bg,
+  [style*="position: absolute"],
+  [style*="position: fixed"] {
+    max-width: 100vw !important;
+    overflow: hidden;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    position: relative;
+  }
+  
+  .container {
+    padding: 0 0.5rem !important;
+    width: calc(100% - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+  }
+  
+  /* Reduce font sizes to prevent text overflow */
+  .section-title {
+    font-size: 2rem !important;
+    text-align: center;
+    padding: 0 0.5rem;
+    line-height: 1.2;
+  }
+  
+  /* Ensure buttons and interactive elements fit */
+  button, .btn, .cta-button {
+    max-width: 100% !important;
+    font-size: 0.9rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+}

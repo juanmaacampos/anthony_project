@@ -1,0 +1,155 @@
+/* ===== CSS IMPORTS ===== */
+/* All imports must come first */
+
+/* Main Application Styles */
+@import './App.css';
+
+/* Layout Styles */
+@import './layout/Header.css';
+@import './layout/Footer.css';
+
+/* Navigation Styles */
+@import './navigation/Navbar.css';
+
+/* Section Styles */
+@import './sections/Menu.css';
+@import './sections/Location.css';
+@import './sections/Contact.css';
+
+/* UI Component Styles */
+@import './ui/MenuItem.css';
+
+/* ===== GLOBAL STYLES ===== */
+
+/* CSS Variables for consistent theming */
+:root {
+  /* Colors */
+  --primary-color: #d4af37;
+  --secondary-color: #2c1810;
+  --accent-color: #f4f4f4;
+  --text-color: #333;
+  --text-light: #666;
+  --background-color: #fff;
+  --error-color: #e74c3c;
+  --success-color: #27ae60;
+  
+  /* Typography */
+  --font-primary: 'Arial', sans-serif;
+  --font-secondary: 'Georgia', serif;
+  
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+  
+  /* Border radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.2);
+  
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* Global reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-primary);
+  color: var(--text-color);
+  background-color: var(--background-color);
+  line-height: 1.6;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+#root {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* ===== MOBILE RESPONSIVE FIXES ===== */
+
+/* Prevent horizontal scrolling on all screen sizes */
+@media screen {
+  html, body, #root, .App {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+}
+
+/* Extra mobile fixes */
+@media (max-width: 480px) {
+  * {
+    max-width: 100vw !important;
+  }
+  
+  .container {
+    padding: 0 0.75rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .header-title {
+    font-size: 2.5rem !important;
+    letter-spacing: -1px !important;
+  }
+  
+  .burger-icon {
+    font-size: 2rem !important;
+  }
+  
+  .header-subtitle {
+    font-size: 1.5rem !important;
+  }
+  
+  .section-title {
+    font-size: 2rem !important;
+    padding: 0 0.5rem;
+  }
+  
+  .category-title {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 320px) {
+  .container {
+    padding: 0 0.5rem !important;
+  }
+  
+  .header-title {
+    font-size: 2rem !important;
+  }
+  
+  .menu-item-content {
+    padding: 1rem !important;
+  }
+  
+  .info-item {
+    padding: 1rem !important;
+  }
+}

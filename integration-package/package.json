@@ -1,0 +1,33 @@
+{
+  "name": "cms-menu-integration",
+  "version": "1.0.0",
+  "description": "SDK para integrar CMS de menús en proyectos React + Vite",
+  "main": "menu-sdk.js",
+  "type": "module",
+  "scripts": {
+    "install-to-project": "echo 'Copia todos los archivos a tu proyecto React en src/cms-menu/'"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "firebase": "^9.0.0"
+  },
+  "keywords": [
+    "cms",
+    "menu",
+    "restaurant",
+    "react",
+    "firebase",
+    "integration"
+  ],
+  "author": "Tu nombre",
+  "license": "MIT",
+  "files": [
+    "menu-sdk.js",
+    "useMenu.js", 
+    "MenuComponents.jsx",
+    "MenuComponents.css",
+    "config.js",
+    "examples.jsx",
+    "README.md"
+  ]
+}
