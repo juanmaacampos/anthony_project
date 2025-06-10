@@ -1,197 +1,337 @@
-# 🍽️ Anthony Project - Restaurant Menu CMS Integration
+# Restaurant CMS Menu System
 
-A modern React + Vite restaurant website with integrated CMS menu system.
+## 📋 Descripción
 
-## ✨ Features
+Este proyecto incluye un sistema CMS (Content Management System) completo para menús de restaurantes, integrado con Firebase Firestore. El sistema permite cargar y mostrar menús de forma dinámica desde una base de datos en la nube, con funcionalidades avanzadas como carrito de compras, gestión de estado y optimización de rendimiento.
 
-- 🎨 Modern, responsive design
-- 🍽️ **CMS Menu Integration** - Dynamic menu management with Firebase
-- 🛒 Shopping cart functionality
-- 📱 Mobile-first approach
-- ⚡ Fast performance with Vite
-- 🎭 Smooth animations with GSAP
+## 🏗️ Arquitectura del CMS
 
-## 🚀 Quick Start
+### Componentes Principales
 
-```bash
-# Install dependencies
-npm install
+#### 1. **GlobalFirebaseManager** (`src/cms-menu/firebase-manager.js`)
+- Gestiona la conexión global a Firebase
+- Implementa patrón Singleton para evitar múltiples inicializaciones
+- Maneja la limpieza de recursos automáticamente
+- Incluye sistema de conteo de referencias para cleanup seguro
 
-# Start development server
-npm run dev
+#### 2. **MenuSDK** (`src/cms-menu/menu-sdk.js`)
+- SDK principal para interactuar con los datos del menú
+- Métodos principales:
+  - `getRestaurantInfo()`: Obtiene información del restaurante
+  - `getFullMenu()`: Carga el menú completo con categorías e ítems
+  - `getFeaturedItems()`: Obtiene productos destacados
 
-# Build for production
-npm run build
+#### 3. **MenuSDKManager** (`src/cms-menu/menu-sdk-singleton.js`)
+- Gestiona instancias únicas del MenuSDK
+- Evita crear múltiples conexiones para el mismo restaurante
+- Optimiza el uso de memoria y recursos
+
+#### 4. **Hooks de React** (`src/cms-menu/useMenu.js`)
+- `useMenu()`: Hook para cargar y gestionar datos del menú
+- `useCart()`: Hook para gestión del carrito de compras
+- `useMenuIntegration()`: Hook unificado que combina menú y carrito
+
+#### 5. **Componentes UI** (`src/cms-menu/MenuComponents.jsx`)
+- `MenuDisplay`: Componente principal para mostrar el menú
+- `MenuItem`: Componente individual para cada producto
+- `Cart`: Componente del carrito de compras
+- `MenuWithCart`: Componente integrado con funcionalidad completa
+
+## 🔧 Configuración
+
+### Firebase Setup
+
+1. **Configuración en `src/cms-menu/config.js`:**
+```javascript
+export const MENU_CONFIG = {
+  firebaseConfig: {
+    apiKey: "tu-api-key",
+    authDomain: "tu-proyecto.firebaseapp.com",
+    projectId: "tu-proyecto-id",
+    storageBucket: "tu-proyecto.firebasestorage.app",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abc123",
+    measurementId: "G-XXXXXXXXX"
+  },
+  restaurantId: "tu-restaurant-uid"
+};
 ```
 
-## 🍽️ CMS Menu Integration
-
-This project includes a complete CMS menu integration system that allows you to:
-
-- Connect to Firebase-based restaurant CMS
-- Display dynamic menus with categories and items
-- Add shopping cart functionality
-- Handle featured items and availability status
-- Responsive design for all devices
-
-### 🔧 Setup CMS Integration
-
-1. **Configure Firebase** in `src/cms-menu/config.js`:
-   ```javascript
-   export const MENU_CONFIG = {
-     firebaseConfig: {
-       apiKey: "your-api-key",
-       authDomain: "your-project.firebaseapp.com",
-       projectId: "your-project-id",
-       // ... other config
-     },
-     restaurantId: "your-restaurant-uid"
-   };
-   ```
-
-2. **Get Restaurant UID**:
-   - Login to your CMS admin panel
-   - Open browser console (F12)
-   - Run: `firebase.auth().currentUser.uid`
-   - Copy the UID to config.js
-
-3. **Test the integration**:
-   ```bash
-   # Run test script
-   ./test-cms-integration.sh
-   
-   # Or start demo mode
-   npm run dev
-   # Visit: /pages/DemoMenuPage.jsx
-   ```
-
-### 📁 CMS Files Structure
-
+2. **Estructura de Datos en Firestore:**
 ```
-src/cms-menu/
-├── menu-sdk.js          # Firebase SDK integration
-├── useMenu.js           # React hooks for menu & cart
-├── MenuComponents.jsx   # Ready-to-use components
-├── MenuComponents.css   # Complete styling
-├── config.js           # Firebase configuration
-└── index.js            # Main exports
-
-src/pages/
-├── MenuPage.jsx         # Full integration example
-└── DemoMenuPage.jsx     # Demo with sample data
+restaurants/
+  └── {restaurantId}/
+      ├── name: "Nombre del Restaurante"
+      ├── description: "Descripción"
+      ├── phone: "+1234567890"
+      ├── email: "contacto@restaurante.com"
+      └── menu/
+          └── {categoryId}/
+              ├── name: "Categoría"
+              ├── description: "Descripción de categoría"
+              ├── order: 1
+              └── items/
+                  └── {itemId}/
+                      ├── name: "Nombre del producto"
+                      ├── description: "Descripción"
+                      ├── price: 12.99
+                      ├── image: "url-imagen"
+                      ├── isAvailable: true
+                      └── isFeatured: false
 ```
 
-### 🎯 Usage Examples
+## 🚀 Integración en la Aplicación
 
-#### Basic Menu Display
+### Paso 1: Importar el Sistema CMS
+
 ```jsx
-import { MenuDisplay } from './cms-menu/MenuComponents';
-import { useMenuIntegration } from './cms-menu/useMenu';
-import { MENU_CONFIG } from './cms-menu/config';
+import { useMenuIntegration } from './cms-menu/useMenu.js';
+import { MENU_CONFIG } from './cms-menu/config.js';
+import { MenuDisplay } from './cms-menu/MenuComponents.jsx';
+```
 
-function RestaurantMenu() {
-  const { menu, loading, error, addToCart } = useMenuIntegration(MENU_CONFIG);
+### Paso 2: Implementar en un Componente
+
+```jsx
+const Menu = () => {
+  // Integración completa del CMS
+  const { menu, loading, error, addToCart, cart, total } = useMenuIntegration(
+    MENU_CONFIG, 
+    { enabled: true }
+  );
+
+  return (
+    <section>
+      <MenuDisplay 
+        menu={menu} 
+        loading={loading}
+        error={error}
+        onAddToCart={addToCart}
+        showImages={true}
+        showPrices={true}
+        showDescription={true}
+      />
+    </section>
+  );
+};
+```
+
+### Paso 3: Ejemplo de Integración Avanzada
+
+```jsx
+const RestaurantApp = () => {
+  const menuIntegration = useMenuIntegration(MENU_CONFIG);
   
   return (
-    <MenuDisplay 
-      menu={menu} 
-      loading={loading} 
-      error={error}
-      onAddToCart={addToCart}
-    />
+    <div>
+      {/* Menú principal */}
+      <MenuDisplay {...menuIntegration} />
+      
+      {/* Carrito flotante */}
+      {menuIntegration.cart.length > 0 && (
+        <Cart 
+          cart={menuIntegration.cart}
+          total={menuIntegration.total}
+          onUpdateQuantity={menuIntegration.updateQuantity}
+          onRemove={menuIntegration.removeFromCart}
+          onClear={menuIntegration.clearCart}
+        />
+      )}
+    </div>
   );
-}
+};
 ```
 
-#### Complete Menu with Cart
-```jsx
-import { MenuWithCart } from './cms-menu/MenuComponents';
-import { createMenuSDK } from './cms-menu/menu-sdk';
-import { MENU_CONFIG } from './cms-menu/config';
+## 📱 Funcionalidades
 
-function MenuPage() {
-  const menuSDK = createMenuSDK(MENU_CONFIG.firebaseConfig, MENU_CONFIG.restaurantId);
-  return <MenuWithCart menuSDK={menuSDK} />;
-}
-```
+### ✅ Gestión de Menú
+- ✅ Carga automática de categorías y productos
+- ✅ Ordenamiento personalizable
+- ✅ Filtrado por disponibilidad
+- ✅ Productos destacados
+- ✅ Imágenes optimizadas
+- ✅ Precios dinámicos
 
-## 📖 Documentation
+### ✅ Carrito de Compras
+- ✅ Agregar/quitar productos
+- ✅ Actualizar cantidades
+- ✅ Cálculo automático de totales
+- ✅ Persistencia en sesión
+- ✅ Contador de productos
 
-- 📋 **[CMS Integration Guide](./CMS_INTEGRATION_GUIDE.md)** - Complete setup instructions
-- 🏗️ **[Project Organization](./ORGANIZATION.md)** - File structure and conventions
-- 🔧 **[Test Script](./test-cms-integration.sh)** - Verify your installation
+### ✅ Optimización y Rendimiento
+- ✅ Singleton pattern para Firebase
+- ✅ Gestión automática de recursos
+- ✅ Lazy loading de imágenes
+- ✅ Error handling robusto
+- ✅ Retry automático en errores de red
+- ✅ Cleanup automático de memoria
 
-## 🛠️ Development
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Test CMS integration
-./test-cms-integration.sh
-```
-
-## 📁 Project Structure
-
-```
-anthony_project/
-├── src/
-│   ├── cms-menu/           # CMS integration system
-│   ├── components/         # Reusable components
-│   ├── pages/             # Page components
-│   ├── styles/            # CSS files
-│   └── utils/             # Utility functions
-├── public/                # Static assets
-└── integration-package/   # CMS package files
-```
-
-## 🎨 Available Components
-
-### CMS Components
-- `<MenuDisplay>` - Complete menu with categories
-- `<MenuItem>` - Individual menu item
-- `<Cart>` - Shopping cart with controls
-- `<MenuWithCart>` - All-in-one solution
-
-### Hooks
-- `useMenu(menuSDK)` - Menu data management
-- `useCart()` - Shopping cart functionality  
-- `useMenuIntegration(config)` - Complete integration
-
-## 🌟 Features
-
-- ✅ Firebase integration
-- ✅ Restaurant info display
-- ✅ Menu categories and items
-- ✅ Shopping cart functionality
-- ✅ Featured items support
-- ✅ Availability status
+### ✅ UX/UI Features
+- ✅ Estados de carga
+- ✅ Manejo de errores user-friendly
+- ✅ Animaciones suaves
 - ✅ Responsive design
-- ✅ Loading states
-- ✅ Error handling
-- ✅ TypeScript ready
+- ✅ Accesibilidad
 
-## 📱 Demo
+## 🛠️ API Reference
 
-Visit `/pages/DemoMenuPage.jsx` to see the CMS integration in action with sample data.
+### useMenuIntegration Hook
 
-## 🤝 Contributing
+```javascript
+const {
+  // Datos del restaurante
+  restaurant,
+  
+  // Menú completo
+  menu,
+  
+  // Estados
+  loading,
+  error,
+  retry,
+  
+  // Carrito
+  cart,
+  total,
+  itemCount,
+  
+  // Acciones del carrito
+  addToCart,
+  updateQuantity,
+  removeFromCart,
+  clearCart,
+  
+  // SDK instance
+  menuSDK
+} = useMenuIntegration(config, options);
+```
 
-1. Fork the repository
-2. Create your feature branch
-3. Make your changes
-4. Test the integration
-5. Submit a pull request
+### MenuSDK Methods
 
-## 📄 License
+```javascript
+const menuSDK = createMenuSDK(firebaseConfig, restaurantId);
 
-MIT License - see LICENSE file for details.
+// Obtener información del restaurante
+const restaurant = await menuSDK.getRestaurantInfo();
+
+// Obtener menú completo
+const menu = await menuSDK.getFullMenu();
+
+// Obtener productos destacados
+const featured = await menuSDK.getFeaturedItems();
+```
+
+## 🔄 Estados del Sistema
+
+### Loading States
+- `loading: true` - Cargando datos iniciales
+- `loading: false` - Datos cargados o error
+
+### Error States
+- Errores de red
+- Errores de permisos
+- Errores de Firebase
+- Retry automático disponible
+
+## 🎨 Personalización
+
+### CSS Classes Disponibles
+```css
+.menu-display
+.menu-category
+.category-title
+.category-description
+.menu-items
+.menu-item
+.item-image
+.item-info
+.item-name
+.item-description
+.item-price
+.add-to-cart-btn
+.cart-container
+.cart-item
+.cart-total
+```
+
+### Configuración de Estilos
+Personaliza los estilos en `src/cms-menu/MenuComponents.css` o sobrescribe las clases CSS en tu tema.
+
+## 🚀 Deployment
+
+1. **Build del proyecto:**
+```bash
+npm run build
+```
+
+2. **Preview local:**
+```bash
+npm run preview
+```
+
+3. **Deploy a GitHub Pages:**
+```bash
+npm run deploy
+```
+
+## 📋 Requisitos del Sistema
+
+- React 18+
+- Firebase 10+
+- Node.js 16+
+- Vite 5+
+
+## 🔐 Seguridad
+
+### Reglas de Firebase Security
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Permitir lectura pública de restaurantes y menús
+    match /restaurants/{restaurantId} {
+      allow read: if true;
+      match /menu/{categoryId} {
+        allow read: if true;
+        match /items/{itemId} {
+          allow read: if true;
+        }
+      }
+    }
+  }
+}
+```
+
+## 🐛 Troubleshooting
+
+### Errores Comunes
+
+1. **"Firebase not initialized"**
+   - Verificar configuración en `config.js`
+   - Comprobar conectividad a internet
+
+2. **"Permission denied"**
+   - Verificar reglas de Firestore
+   - Comprobar configuración del proyecto
+
+3. **"Restaurant not found"**
+   - Verificar que el `restaurantId` exista en Firestore
+   - Verificar estructura de datos
+
+### Debug Mode
+```javascript
+// Activar logs detallados
+const options = { 
+  enabled: true, 
+  debug: true 
+};
+```
+
+## 📞 Soporte
+
+Para reportar bugs o solicitar features, crear un issue en el repositorio del proyecto.
+
+---
+
+**Desarrollado con ❤️ para restaurantes modernos**

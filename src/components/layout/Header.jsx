@@ -37,15 +37,15 @@ const Header = () => {
       <div className="container">
         <div className="header-content">
           <h1 ref={titleRef} className="header-title">
-            ANTHONY
+            YOUR
             <br />
-            BURG<span className="burger-icon">🍔</span>R
+            RESTAURANT
           </h1>
           <p ref={subtitleRef} className="header-subtitle">
-            Comunidad
+            Template
           </p>
           <button ref={ctaRef} className="btn-primary header-cta" onClick={scrollToMenu}>
-            Ver Menú
+            View Menu
           </button>
         </div>
       </div>

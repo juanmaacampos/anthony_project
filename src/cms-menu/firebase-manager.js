@@ -61,7 +61,7 @@ class GlobalFirebaseManager {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Create new Firebase app with unique name
-      const appName = `anthony-cms-global-${Date.now()}`;
+      const appName = `restaurant-cms-global-${Date.now()}`;
       this.app = initializeApp(firebaseConfig, appName);
       this.db = getFirestore(this.app);
 

@@ -7,12 +7,12 @@ const Footer = () => {
       <div className="container">
         <div className="footer-content">
           <div className="footer-brand">
-            <h3>ANTHONY BURGER</h3>
-            <p>La mejor experiencia en hamburguesas artesanales</p>
+            <h3>YOUR RESTAURANT</h3>
+            <p>The best dining experience in town</p>
           </div>
           
           <div className="footer-social">
-            <h4>Síguenos</h4>
+            <h4>Follow Us</h4>
             <div className="social-links">
               <a href="#" className="social-link">
                 <FaInstagram />
@@ -30,15 +30,15 @@ const Footer = () => {
           </div>
           
           <div className="footer-contact">
-            <h4>Contacto</h4>
-            <p>Av. Principal 123</p>
-            <p>+57 300 123 4567</p>
-            <p>info@anthonyburger.com</p>
+            <h4>Contact</h4>
+            <p>123 Main Street</p>
+            <p>+1 (555) 123-4567</p>
+            <p>info@yourrestaurant.com</p>
           </div>
         </div>
         
         <div className="footer-bottom">
-          <p>&copy; 2024 Anthony Burger. Todos los derechos reservados.</p>
+          <p>&copy; 2024 Your Restaurant. All rights reserved.</p>
         </div>
       </div>
     </footer>

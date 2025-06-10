@@ -1,6 +1,6 @@
 # Assets Organization
 
-This folder contains all static assets for the Anthony project.
+This folder contains all static assets for the restaurant template project.
 
 ## Structure
 
@@ -11,5 +11,5 @@ This folder contains all static assets for the Anthony project.
 ## Naming Convention
 
 - Use kebab-case for file names
-- Use descriptive names (e.g., `anthony-logo.png`, `menu-background.jpg`)
+- Use descriptive names (e.g., `restaurant-logo.png`, `menu-background.jpg`)
 - Optimize images for web (WebP format when possible)

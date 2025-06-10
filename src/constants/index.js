@@ -14,7 +14,7 @@ export const MENU_ITEMS = [
 // Contact information
 export const CONTACT_INFO = {
   phone: "+1234567890",
-  email: "anthony@restaurant.com",
+  email: "info@restaurant.com",
   address: "123 Restaurant Street, City",
   hours: {
     weekdays: "11:00 AM - 10:00 PM",
@@ -24,9 +24,9 @@ export const CONTACT_INFO = {
 
 // Social media links
 export const SOCIAL_LINKS = {
-  instagram: "https://instagram.com/anthony",
-  facebook: "https://facebook.com/anthony",
-  twitter: "https://twitter.com/anthony",
+  instagram: "https://instagram.com/restaurant",
+  facebook: "https://facebook.com/restaurant",
+  twitter: "https://twitter.com/restaurant",
   whatsapp: "https://wa.me/1234567890"
 };
 

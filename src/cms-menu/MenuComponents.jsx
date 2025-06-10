@@ -19,31 +19,23 @@ export function MenuDisplay({
   
   if (error) return (
     <div className="menu-error">
-      <div className="error-icon">❌</div>
-      <h3>Error al cargar el menú</h3>
-      <p>{error}</p>
+      <div className="error-icon">😔</div>
+      <h3>Menú temporalmente no disponible</h3>
+      <p>Estamos experimentando dificultades técnicas. Por favor, intenta de nuevo en unos momentos.</p>
       {onRetry && (
         <button onClick={onRetry} className="retry-button">
           🔄 Intentar de nuevo
         </button>
       )}
-      <div className="error-help">
-        <small>
-          Si el problema persiste, verifica tu conexión a internet o 
-          <a href="/diagnostic" style={{ color: '#007bff', marginLeft: '5px' }}>
-            ejecutar diagnóstico
-          </a>
-        </small>
-      </div>
     </div>
   );
   
   if (!menu || menu.length === 0) return (
     <div className="menu-empty">
-      📋 No hay elementos en el menú
+      🍽️ Estamos preparando nuestro menú...
       {onRetry && (
         <button onClick={onRetry} className="retry-button" style={{ marginTop: '1rem' }}>
-          🔄 Recargar menú
+          🔄 Actualizar
         </button>
       )}
     </div>
