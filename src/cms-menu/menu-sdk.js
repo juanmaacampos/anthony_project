@@ -1,4 +1,5 @@
 import { collection, doc, getDoc, getDocs, query, orderBy } from 'firebase/firestore';
+import { ref, getDownloadURL } from 'firebase/storage';
 import { globalFirebaseManager } from './firebase-manager.js';
 
 export class MenuSDK {
@@ -7,6 +8,7 @@ export class MenuSDK {
     this.restaurantId = restaurantId;
     this.app = null;
     this.db = null;
+    this.storage = null;
     this.initialized = false;
   }
 
@@ -14,12 +16,62 @@ export class MenuSDK {
     if (this.initialized) return;
 
     try {
-      const { app, db } = await globalFirebaseManager.initialize(this.firebaseConfig);
+      const { app, db, storage } = await globalFirebaseManager.initialize(this.firebaseConfig);
       this.app = app;
       this.db = db;
+      this.storage = storage;
       this.initialized = true;
     } catch (error) {
       throw new Error(`Failed to initialize MenuSDK: ${error.message}`);
+    }
+  }
+
+  async _resolveImageUrl(imagePath) {
+    console.log('🔍 Attempting to resolve image path:', imagePath);
+    
+    if (!imagePath) {
+      console.log('❌ No image path provided');
+      return null;
+    }
+    
+    try {
+      // Si ya es una URL completa, devolverla tal como está
+      if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        console.log('✅ Already a complete URL:', imagePath);
+        return imagePath;
+      }
+      
+      await this._ensureInitialized();
+      
+      if (!this.storage) {
+        console.error('❌ Firebase Storage not initialized');
+        return null;
+      }
+      
+      console.log('🔧 Creating Firebase Storage reference for path:', imagePath);
+      
+      // Crear referencia al archivo en Firebase Storage
+      const imageRef = ref(this.storage, imagePath);
+      console.log('📁 Storage reference created:', imageRef.fullPath);
+      
+      const downloadURL = await getDownloadURL(imageRef);
+      
+      console.log('🖼️ Image URL resolved successfully:', { 
+        originalPath: imagePath, 
+        resolvedURL: downloadURL,
+        bucket: imageRef.bucket,
+        fullPath: imageRef.fullPath
+      });
+      
+      return downloadURL;
+    } catch (error) {
+      console.error('❌ Failed to resolve image URL:', {
+        path: imagePath,
+        error: error.message,
+        code: error.code,
+        fullError: error
+      });
+      return null;
     }
   }
 
@@ -82,10 +134,43 @@ export class MenuSDK {
         const itemsQuery = query(itemsRef, orderBy('name', 'asc'));
         const itemsSnapshot = await getDocs(itemsQuery);
         
-        categoryData.items = itemsSnapshot.docs.map(itemDoc => ({
-          id: itemDoc.id,
-          ...itemDoc.data()
-        }));
+        // Resolver URLs de imágenes para cada item
+        console.log(`🔄 Processing ${itemsSnapshot.docs.length} items for category "${categoryData.name}"`);
+        
+        const itemsWithImages = await Promise.all(
+          itemsSnapshot.docs.map(async (itemDoc) => {
+            const itemData = {
+              id: itemDoc.id,
+              ...itemDoc.data()
+            };
+            
+            console.log(`📄 Processing item "${itemData.name}":`, {
+              hasImage: !!itemData.image,
+              imagePath: itemData.image,
+              itemId: itemData.id
+            });
+            
+            // Resolver URL de imagen si existe
+            if (itemData.image) {
+              console.log(`🖼️ Resolving image for "${itemData.name}": ${itemData.image}`);
+              const resolvedImageUrl = await this._resolveImageUrl(itemData.image);
+              
+              if (resolvedImageUrl) {
+                itemData.image = resolvedImageUrl;
+                console.log(`✅ Image resolved for "${itemData.name}": ${resolvedImageUrl}`);
+              } else {
+                console.warn(`⚠️ Failed to resolve image for "${itemData.name}": ${itemData.image}`);
+                itemData.image = null; // Set to null if resolution fails
+              }
+            } else {
+              console.log(`ℹ️ No image for item "${itemData.name}"`);
+            }
+            
+            return itemData;
+          })
+        );
+        
+        categoryData.items = itemsWithImages;
         
         console.log(`📋 Category "${categoryData.name}":`, categoryData.items.length, 'items');
         

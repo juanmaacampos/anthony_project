@@ -1,6 +1,90 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useMenu, useCart } from './useMenu.js';
 import './MenuComponents.css';
+
+// Componente mejorado para manejo de imágenes con fallback
+function ImageWithFallback({ src, alt, className, placeholder = "🍽️" }) {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Log cuando cambia la src prop
+  React.useEffect(() => {
+    console.log('🖼️ ImageWithFallback received new src:', {
+      src,
+      alt,
+      isValidUrl: isValidFirebaseUrl(src)
+    });
+    setImgSrc(src);
+    setHasError(false);
+    setIsLoading(true);
+  }, [src]);
+
+  const handleError = useCallback((event) => {
+    console.error('❌ Image failed to load:', {
+      src: src,
+      alt: alt,
+      error: event.type,
+      naturalWidth: event.target?.naturalWidth,
+      naturalHeight: event.target?.naturalHeight
+    });
+    setHasError(true);
+    setIsLoading(false);
+  }, [src, alt]);
+
+  const handleLoad = useCallback((event) => {
+    console.log('✅ Image loaded successfully:', {
+      src: src,
+      alt: alt,
+      naturalWidth: event.target.naturalWidth,
+      naturalHeight: event.target.naturalHeight
+    });
+    setIsLoading(false);
+    setHasError(false);
+  }, [src, alt]);
+
+  // Validar URL de Firebase Storage
+  const isValidFirebaseUrl = (url) => {
+    if (!url) return false;
+    const isValid = url.includes('firebasestorage.googleapis.com') || 
+           url.includes('storage.googleapis.com') ||
+           url.startsWith('http://') || 
+           url.startsWith('https://');
+    
+    console.log('🔍 URL validation:', { url, isValid });
+    return isValid;
+  };
+
+  // Si no hay imagen válida o hay error, mostrar placeholder
+  if (!src || !isValidFirebaseUrl(src) || hasError) {
+    const reason = !src ? 'no src' : 
+                   !isValidFirebaseUrl(src) ? 'invalid URL' : 
+                   'load error';
+    
+    console.log('🔄 Showing placeholder:', { src, reason });
+    
+    return (
+      <div className={`${className} item-placeholder`}>
+        {placeholder}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={imgSrc}
+      alt={alt}
+      className={className}
+      crossOrigin="anonymous"
+      onError={handleError}
+      onLoad={handleLoad}
+      style={{
+        opacity: isLoading ? 0.7 : 1,
+        transition: 'opacity 0.3s ease'
+      }}
+    />
+  );
+}
 
 export function MenuDisplay({ 
   menu, 
@@ -81,11 +165,12 @@ export function MenuItem({
   return (
     <div className={`menu-item ${!item.isAvailable ? 'unavailable' : ''}`}>
       {showImage && (
-        item.image ? (
-          <img src={item.image} alt={item.name} className="item-image" />
-        ) : (
-          <div className="item-placeholder">🍽️</div>
-        )
+        <ImageWithFallback 
+          src={item.image} 
+          alt={item.name} 
+          className="item-image"
+          placeholder="🍽️"
+        />
       )}
       
       <div className="item-content">

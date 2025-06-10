@@ -5,6 +5,9 @@ import { Navbar } from './components/navigation'
 import { optimizeForMobile } from './utils'
 import './styles/index.css'
 
+// Temporary Firebase Storage debug
+import './cms-menu/storage-test.js'
+
 function App() {
   useEffect(() => {
     // Optimize for mobile devices
