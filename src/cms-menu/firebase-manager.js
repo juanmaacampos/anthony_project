@@ -3,11 +3,13 @@
 
 import { initializeApp, getApps, deleteApp } from 'firebase/app';
 import { getFirestore, enableNetwork, disableNetwork, terminate } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 class GlobalFirebaseManager {
   constructor() {
     this.app = null;
     this.db = null;
+    this.storage = null;
     this.isInitialized = false;
     this.isNetworkEnabled = false;
     this.initializationPromise = null;
@@ -22,7 +24,7 @@ class GlobalFirebaseManager {
         await this.initializationPromise;
         this.referenceCount++;
         console.log(`📊 Firebase references: ${this.referenceCount}`);
-        return { app: this.app, db: this.db };
+        return { app: this.app, db: this.db, storage: this.storage };
       } catch (error) {
         console.error('⚠️ Previous initialization failed, retrying...');
         this.initializationPromise = null;
@@ -34,7 +36,7 @@ class GlobalFirebaseManager {
     if (this.isInitialized && this.app && this.db) {
       this.referenceCount++;
       console.log(`📊 Firebase references: ${this.referenceCount}`);
-      return { app: this.app, db: this.db };
+      return { app: this.app, db: this.db, storage: this.storage };
     }
 
     // Start initialization
@@ -64,6 +66,7 @@ class GlobalFirebaseManager {
       const appName = `restaurant-cms-global-${Date.now()}`;
       this.app = initializeApp(firebaseConfig, appName);
       this.db = getFirestore(this.app);
+      this.storage = getStorage(this.app);
 
       // Enable network connection
       await this._ensureNetworkConnection();
@@ -71,7 +74,7 @@ class GlobalFirebaseManager {
       this.isInitialized = true;
       console.log('✅ Global Firebase Manager: Initialized successfully');
 
-      return { app: this.app, db: this.db };
+      return { app: this.app, db: this.db, storage: this.storage };
     } catch (error) {
       console.error('❌ Global Firebase Manager: Initialization failed:', error);
       this.isInitialized = false;
@@ -164,6 +167,7 @@ class GlobalFirebaseManager {
       // Reset all state
       this.app = null;
       this.db = null;
+      this.storage = null;
       this.isNetworkEnabled = false;
       this.initializationPromise = null;
       this.referenceCount = 0;
@@ -174,6 +178,7 @@ class GlobalFirebaseManager {
       // Force reset even if cleanup failed
       this.app = null;
       this.db = null;
+      this.storage = null;
       this.isInitialized = false;
       this.isNetworkEnabled = false;
       this.initializationPromise = null;
@@ -193,6 +198,13 @@ class GlobalFirebaseManager {
       throw new Error('Firebase not initialized. Call initialize() first.');
     }
     return this.app;
+  }
+
+  getStorage() {
+    if (!this.isInitialized || !this.storage) {
+      throw new Error('Firebase Storage not initialized. Call initialize() first.');
+    }
+    return this.storage;
   }
 
   isReady() {

@@ -1,30 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useMenu, useCart } from './useMenu.js';
 import './MenuComponents.css';
 
-// Componente para imagen con loading y error handling mejorado
+// Componente mejorado para manejo de imágenes con fallback - combinando ambas versiones
 function ImageWithFallback({ src, alt, className, placeholder = "🍽️" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const handleLoad = () => {
+  // Log cuando cambia la src prop
+  React.useEffect(() => {
+    console.log('🖼️ ImageWithFallback received new src:', {
+      src,
+      alt,
+      isValidUrl: isValidFirebaseUrl(src)
+    });
+    setLoading(true);
+    setError(false);
+  }, [src]);
+
+  const handleLoad = useCallback((event) => {
+    console.log('✅ Image loaded successfully:', {
+      src: src,
+      alt: alt,
+      naturalWidth: event.target.naturalWidth,
+      naturalHeight: event.target.naturalHeight
+    });
     setLoading(false);
     setError(false);
-  };
+  }, [src, alt]);
 
-  const handleError = () => {
+  const handleError = useCallback((event) => {
+    console.error('❌ Image failed to load:', {
+      src: src,
+      alt: alt,
+      error: event.type,
+      naturalWidth: event.target?.naturalWidth,
+      naturalHeight: event.target?.naturalHeight
+    });
     setLoading(false);
     setError(true);
-    console.warn(`Error loading image: ${src}`);
+  }, [src, alt]);
+
+  // Validar URL de Firebase Storage
+  const isValidFirebaseUrl = (url) => {
+    if (!url) return false;
+    const isValid = url.includes('firebasestorage.googleapis.com') || 
+           url.includes('storage.googleapis.com') ||
+           url.startsWith('http://') || 
+           url.startsWith('https://');
+    
+    console.log('🔍 URL validation:', { url, isValid });
+    return isValid;
   };
 
   // Si no hay src, mostrar placeholder directamente
-  if (!src) {
+  if (!src || !isValidFirebaseUrl(src)) {
+    const reason = !src ? 'no src' : 'invalid URL';
+    console.log('🔄 Showing placeholder:', { src, reason });
     return <div className={`${className} item-placeholder`}>{placeholder}</div>;
   }
 
   // Si hubo error, mostrar placeholder
   if (error) {
+    console.log('🔄 Showing placeholder due to error:', { src });
     return <div className={`${className} item-placeholder`}>{placeholder}</div>;
   }
 
@@ -43,7 +81,9 @@ function ImageWithFallback({ src, alt, className, placeholder = "🍽️" }) {
           display: loading ? 'none' : 'block',
           width: '100%',
           height: '100%',
-          objectFit: 'cover'
+          objectFit: 'cover',
+          opacity: loading ? 0.7 : 1,
+          transition: 'opacity 0.3s ease'
         }}
       />
     </div>
@@ -133,6 +173,7 @@ export function MenuItem({
           src={item.image} 
           alt={item.name} 
           className="item-image"
+          placeholder="🍽️"
         />
       )}
       
