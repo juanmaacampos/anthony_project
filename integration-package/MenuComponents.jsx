@@ -50,51 +50,34 @@ function ImageWithFallback({ src, alt, className, placeholder = "🍽️" }) {
   );
 }
 
+// Componente principal del menú
 export function MenuDisplay({ 
   menu, 
-  loading, 
-  error, 
   onAddToCart, 
-  showDescription = true,
-  onRetry
+  loading, 
+  error,
+  showImages = true,
+  showPrices = true,
+  showDescription = true 
 }) {
-  if (loading) return (
-    <div className="menu-loading">
-      🍽️ Cargando menú...
-      <div className="loading-spinner"></div>
-    </div>
-  );
-  
-  if (error) return (
-    <div className="menu-error">
-      <div className="error-icon">😔</div>
-      <h3>Menú temporalmente no disponible</h3>
-      <p>Estamos experimentando dificultades técnicas. Por favor, intenta de nuevo en unos momentos.</p>
-      {onRetry && (
-        <button onClick={onRetry} className="retry-button">
-          🔄 Intentar de nuevo
-        </button>
-      )}
-    </div>
-  );
-  
-  if (!menu || menu.length === 0) return (
-    <div className="menu-empty">
-      🍽️ Estamos preparando nuestro menú...
-      {onRetry && (
-        <button onClick={onRetry} className="retry-button" style={{ marginTop: '1rem' }}>
-          🔄 Actualizar
-        </button>
-      )}
-    </div>
-  );
+  if (loading) {
+    return <div className="menu-loading">🍽️ Cargando menú delicioso...</div>;
+  }
+
+  if (error) {
+    return <div className="menu-error">❌ Error: {error}</div>;
+  }
+
+  if (!menu || menu.length === 0) {
+    return <div className="menu-empty">📋 No hay platos disponibles</div>;
+  }
 
   return (
     <div className="menu-display">
       {menu.map(category => (
         <div key={category.id} className="menu-category">
-          <h3 className="category-title">{category.name}</h3>
-          {category.description && showDescription && (
+          <h2 className="category-title">{category.name}</h2>
+          {category.description && (
             <p className="category-description">{category.description}</p>
           )}
           <div className="menu-items">
@@ -103,6 +86,8 @@ export function MenuDisplay({
                 key={item.id}
                 item={item}
                 onAddToCart={onAddToCart}
+                showImage={showImages}
+                showPrice={showPrices}
                 showDescription={showDescription}
               />
             ))}
@@ -113,6 +98,7 @@ export function MenuDisplay({
   );
 }
 
+// Componente individual del item
 export function MenuItem({ 
   item, 
   onAddToCart, 
@@ -120,17 +106,11 @@ export function MenuItem({
   showPrice = true, 
   showDescription = true 
 }) {
-  const handleAddToCart = () => {
-    if (onAddToCart && item.isAvailable) {
-      onAddToCart(item);
-    }
-  };
-
   return (
-    <div className={`menu-item ${!item.isAvailable ? 'unavailable' : ''}`}>
+    <div className="menu-item">
       {showImage && (
         <ImageWithFallback 
-          src={item.image} 
+          src={item.imageUrl} 
           alt={item.name} 
           className="item-image"
         />
@@ -138,7 +118,7 @@ export function MenuItem({
       
       <div className="item-content">
         <div className="item-header">
-          <h4 className="item-name">{item.name}</h4>
+          <h3 className="item-name">{item.name}</h3>
           {showPrice && <span className="item-price">${item.price}</span>}
         </div>
         
@@ -151,24 +131,74 @@ export function MenuItem({
           {!item.isAvailable && <span className="tag unavailable">No disponible</span>}
         </div>
         
-        <button 
-          className="add-button"
-          onClick={handleAddToCart}
-          disabled={!item.isAvailable}
-        >
-          {item.isAvailable ? 'Agregar al carrito' : 'No disponible'}
-        </button>
+        {onAddToCart && (
+          <button 
+            className="add-button"
+            onClick={() => onAddToCart(item)}
+            disabled={!item.isAvailable}
+          >
+            Agregar al carrito
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-export function Cart({ cart, onUpdateQuantity, onRemove, onClear, total }) {
+// Componente solo para platos destacados
+export function FeaturedItems({ 
+  featuredItems, 
+  onAddToCart, 
+  loading, 
+  error,
+  title = "Platos Destacados" 
+}) {
+  if (loading) {
+    return <div className="menu-loading">🌟 Cargando destacados...</div>;
+  }
+
+  if (error) {
+    return <div className="menu-error">❌ Error: {error}</div>;
+  }
+
+  if (!featuredItems || featuredItems.length === 0) {
+    return <div className="menu-empty">⭐ No hay platos destacados</div>;
+  }
+
+  return (
+    <div className="featured-items">
+      <h2 className="featured-title">{title}</h2>
+      <div className="menu-items">
+        {featuredItems.map(item => (
+          <MenuItem
+            key={item.id}
+            item={item}
+            onAddToCart={onAddToCart}
+            showImage={true}
+            showPrice={true}
+            showDescription={true}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Componente de carrito
+export function Cart({ 
+  cart, 
+  onUpdateQuantity, 
+  onRemove, 
+  onClear,
+  total,
+  title = "Carrito" 
+}) {
   if (cart.length === 0) {
     return (
-      <div className="cart empty">
-        <h3>🛒 Carrito vacío</h3>
-        <p>Agrega algunos productos deliciosos</p>
+      <div className="cart-empty">
+        <h3>{title}</h3>
+        <p>Tu carrito está vacío</p>
+        <span className="cart-icon">🛒</span>
       </div>
     );
   }
@@ -176,8 +206,8 @@ export function Cart({ cart, onUpdateQuantity, onRemove, onClear, total }) {
   return (
     <div className="cart">
       <div className="cart-header">
-        <h3>🛒 Tu Pedido ({cart.length} items)</h3>
-        <button className="clear-cart" onClick={onClear}>
+        <h3>{title} ({cart.length})</h3>
+        <button onClick={onClear} className="clear-button">
           Limpiar
         </button>
       </div>
@@ -186,8 +216,8 @@ export function Cart({ cart, onUpdateQuantity, onRemove, onClear, total }) {
         {cart.map(item => (
           <div key={item.id} className="cart-item">
             <div className="cart-item-info">
-              <h4>{item.name}</h4>
-              <p>${item.price}</p>
+              <span className="cart-item-name">{item.name}</span>
+              <span className="cart-item-price">${item.price}</span>
             </div>
             <div className="cart-item-controls">
               <button 
@@ -204,47 +234,58 @@ export function Cart({ cart, onUpdateQuantity, onRemove, onClear, total }) {
                 +
               </button>
               <button 
-                onClick={() => onRemove(item.id)}
+                onClick={() => onRemove(item.id)} 
                 className="remove-btn"
               >
-                🗑️
+                ✕
               </button>
+            </div>
+            <div className="cart-item-total">
+              ${(item.price * item.quantity).toFixed(2)}
             </div>
           </div>
         ))}
       </div>
       
-      <div className="cart-total">
-        <strong>Total: ${total.toLocaleString()}</strong>
+      <div className="cart-footer">
+        <div className="cart-total">
+          <strong>Total: ${total.toFixed(2)}</strong>
+        </div>
       </div>
-      
-      <button className="checkout-btn">
-        Proceder al Pago
-      </button>
     </div>
   );
 }
 
-export function MenuWithCart({ menuSDK }) {
-  const { restaurant, menu, loading, error, retry } = useMenu(menuSDK, { enabled: true });
-  const { cart, addToCart, updateQuantity, removeFromCart, clearCart, total } = useCart();
+// Componente completo con menú y carrito integrado
+export function MenuWithCart({ menuSDK, showImages = true }) {
+  const { restaurant, menu, loading, error } = useMenu(menuSDK);
+  const { 
+    cart, 
+    addToCart, 
+    removeFromCart, 
+    updateQuantity, 
+    clearCart, 
+    cartTotal 
+  } = useCart();
 
   return (
     <div className="menu-with-cart">
       <div className="menu-section">
         {restaurant && (
           <div className="restaurant-header">
-            <h1>{restaurant.name}</h1>
-            {restaurant.description && <p>{restaurant.description}</p>}
+            <h1>🍽️ {restaurant.name}</h1>
+            {restaurant.description && (
+              <p className="restaurant-description">{restaurant.description}</p>
+            )}
           </div>
         )}
         
         <MenuDisplay
           menu={menu}
+          onAddToCart={addToCart}
           loading={loading}
           error={error}
-          onAddToCart={addToCart}
-          onRetry={retry}
+          showImages={showImages}
         />
       </div>
       
@@ -254,7 +295,7 @@ export function MenuWithCart({ menuSDK }) {
           onUpdateQuantity={updateQuantity}
           onRemove={removeFromCart}
           onClear={clearCart}
-          total={total}
+          total={cartTotal}
         />
       </div>
     </div>
