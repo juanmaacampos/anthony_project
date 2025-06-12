@@ -14,11 +14,14 @@
   "dependencies": {
     "@googlemaps/react-wrapper": "^1.1.35",
     "firebase": "^10.8.0",
+    "firebase-admin": "^13.4.0",
+    "firebase-functions": "^6.3.2",
     "gsap": "^3.12.2",
     "lottie-react": "^2.4.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-icons": "^4.12.0"
+    "react-icons": "^4.12.0",
+    "react-router-dom": "^7.6.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

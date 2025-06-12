@@ -156,8 +156,19 @@ const RestaurantApp = () => {
 - ✅ Agregar/quitar productos
 - ✅ Actualizar cantidades
 - ✅ Cálculo automático de totales
-- ✅ Persistencia en sesión
+- ✅ Persistencia con localStorage
 - ✅ Contador de productos
+- ✅ Overlay modal responsive
+- ✅ Feedback visual en botones
+- ✅ Debug logging para desarrollo
+
+### ✅ Sistema de Órdenes
+- ✅ Formulario de datos del cliente
+- ✅ Validación de campos requeridos
+- ✅ Creación de órdenes en Firebase
+- ✅ Gestión de estados de pedidos
+- ✅ Manejo de errores
+- 🔄 Integración con MercadoPago (próximamente)
 
 ### ✅ Optimización y Rendimiento
 - ✅ Singleton pattern para Firebase

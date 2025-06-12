@@ -99,20 +99,44 @@ export function useMenu(menuSDK, options = { enabled: true }) {
 }
 
 export function useCart() {
-  const [cart, setCart] = useState([]);
+  // Initialize cart from localStorage
+  const [cart, setCart] = useState(() => {
+    try {
+      const savedCart = localStorage.getItem('restaurant-cart');
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.warn('Error loading cart from localStorage:', error);
+      return [];
+    }
+  });
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('restaurant-cart', JSON.stringify(cart));
+    } catch (error) {
+      console.warn('Error saving cart to localStorage:', error);
+    }
+  }, [cart]);
 
   const addToCart = (item, quantity = 1) => {
+    console.log('🛒 Adding to cart:', item, 'quantity:', quantity);
+    
     setCart(prevCart => {
       const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
       
       if (existingItem) {
-        return prevCart.map(cartItem =>
+        const updatedCart = prevCart.map(cartItem =>
           cartItem.id === item.id
             ? { ...cartItem, quantity: cartItem.quantity + quantity }
             : cartItem
         );
+        console.log('📝 Updated existing item in cart:', updatedCart);
+        return updatedCart;
       } else {
-        return [...prevCart, { ...item, quantity }];
+        const newCart = [...prevCart, { ...item, quantity }];
+        console.log('➕ Added new item to cart:', newCart);
+        return newCart;
       }
     });
   };
@@ -135,7 +159,9 @@ export function useCart() {
   };
 
   const clearCart = () => {
+    console.log('🗑️ Clearing cart');
     setCart([]);
+    localStorage.removeItem('restaurant-cart');
   };
 
   const getTotal = () => {
@@ -168,6 +194,7 @@ export function useMenuIntegration(config, options = { enabled: true }) {
   return {
     ...menuData,
     ...cartData,
-    menuSDK
+    menuSDK,
+    firebaseManager: menuSDK?.firebaseManager || null
   };
 }

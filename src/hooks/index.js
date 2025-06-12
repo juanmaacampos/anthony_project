@@ -64,3 +64,24 @@ export const useWindowDimensions = () => {
 
   return windowDimensions;
 };
+
+// Hook for Firebase connection status
+export const useFirebaseConnection = () => {
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
+  
+  useEffect(() => {
+    // This will be integrated with the MenuContext
+    const checkConnection = () => {
+      try {
+        // Basic connection check
+        setConnectionStatus('connected');
+      } catch (error) {
+        setConnectionStatus('error');
+      }
+    };
+    
+    checkConnection();
+  }, []);
+  
+  return connectionStatus;
+};

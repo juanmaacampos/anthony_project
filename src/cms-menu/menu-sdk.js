@@ -1,5 +1,6 @@
 import { collection, doc, getDoc, getDocs, query, orderBy } from 'firebase/firestore';
 import { globalFirebaseManager } from './firebase-manager.js';
+import { OrderService } from './order-service.js';
 
 export class MenuSDK {
   constructor(firebaseConfig, restaurantId) {
@@ -8,6 +9,8 @@ export class MenuSDK {
     this.app = null;
     this.db = null;
     this.initialized = false;
+    this.orderService = null;
+    this.firebaseManager = globalFirebaseManager;
   }
 
   async _ensureInitialized() {
@@ -18,6 +21,9 @@ export class MenuSDK {
       this.app = app;
       this.db = db;
       this.initialized = true;
+      
+      // Initialize order service with firebaseManager
+      this.orderService = new OrderService(globalFirebaseManager, this.restaurantId);
     } catch (error) {
       throw new Error(`Failed to initialize MenuSDK: ${error.message}`);
     }
@@ -132,6 +138,27 @@ export class MenuSDK {
       console.error('Error getting featured items:', error);
       throw error;
     }
+  }
+
+  async createOrder(orderData) {
+    if (!this.orderService) {
+      throw new Error('SDK not initialized. Call initialize() first.');
+    }
+    return await this.orderService.createOrder(orderData);
+  }
+
+  async updateOrderStatus(orderId, status, paymentStatus = null) {
+    if (!this.orderService) {
+      throw new Error('SDK not initialized. Call initialize() first.');
+    }
+    return await this.orderService.updateOrderStatus(orderId, status, paymentStatus);
+  }
+
+  async getOrder(orderId) {
+    if (!this.orderService) {
+      throw new Error('SDK not initialized. Call initialize() first.');
+    }
+    return await this.orderService.getOrder(orderId);
   }
 }
 

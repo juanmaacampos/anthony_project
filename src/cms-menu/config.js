@@ -10,5 +10,17 @@ export const MENU_CONFIG = {
   },
   
   // UID del restaurante configurado
-  restaurantId: "HsuTZWhRVkT88a0WOztELGzJUhl1"
+  restaurantId: "HsuTZWhRVkT88a0WOztELGzJUhl1",
+  
+  // MercadoPago configuration - DESHABILITADO TEMPORALMENTE
+  mercadoPago: {
+    publicKey: "TEST-public-key", // Usar credenciales de prueba por ahora
+    accessToken: "TEST-access-token",
+    currency: "ARS",
+    enabled: false // Deshabilitar por ahora
+  },
+  
+  // URLs de tu aplicación
+  baseUrl: "http://localhost:5173", // Para desarrollo local
+  backendUrl: "http://localhost:3001" // Para cuando implementes el backend
 };
