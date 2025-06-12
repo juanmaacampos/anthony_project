@@ -7,6 +7,9 @@ import { useMenu } from './context/MenuContext'
 import { optimizeForMobile } from './utils'
 import './styles/index.css'
 
+// Temporary Firebase Storage debug
+import './cms-menu/storage-test.js'
+
 function App() {
   const { isConnected, error } = useMenu();
 
