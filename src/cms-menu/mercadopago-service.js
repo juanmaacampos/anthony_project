@@ -1,3 +1,5 @@
+import { MENU_CONFIG } from './config.js';
+
 class MercadoPagoService {
   constructor(config) {
     this.publicKey = config.publicKey;
@@ -69,14 +71,14 @@ class MercadoPagoService {
           }
         },
         back_urls: {
-          success: `${window.location.origin}/payment/success?order_id=${orderData.orderId}`,
-          failure: `${window.location.origin}/payment/failure?order_id=${orderData.orderId}`,
-          pending: `${window.location.origin}/payment/pending?order_id=${orderData.orderId}`
+          success: `${MENU_CONFIG.baseUrl}/payment/success?order_id=${orderData.orderId}`,
+          failure: `${MENU_CONFIG.baseUrl}/payment/failure?order_id=${orderData.orderId}`,
+          pending: `${MENU_CONFIG.baseUrl}/payment/pending?order_id=${orderData.orderId}`
         },
         auto_return: 'approved',
         external_reference: orderData.orderId,
         statement_descriptor: 'RESTAURANTE',
-        notification_url: `${window.location.origin}/api/webhooks/mercadopago`
+        notification_url: `https://us-central1-cms-menu-7b4a4.cloudfunctions.net/mercadoPagoWebhookV2`
       };
 
       // Hacer la llamada directa a la API de MercadoPago

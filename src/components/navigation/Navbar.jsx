@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
-import { FaHome, FaUtensils, FaMapMarkerAlt, FaEnvelope } from 'react-icons/fa';
+import { FaHome, FaUtensils, FaMapMarkerAlt, FaEnvelope, FaShoppingCart } from 'react-icons/fa';
 import '../../styles/navigation/Navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ onCartClick, itemCount }) => {
   const [activeSection, setActiveSection] = useState('home');
   const [isVisible, setIsVisible] = useState(false);
+
+  // Debug itemCount changes
+  useEffect(() => {
+    console.log('🧭 Navbar - itemCount updated:', itemCount);
+  }, [itemCount]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,16 +56,32 @@ const Navbar = () => {
   return (
     <nav className={`navbar ${isVisible ? 'navbar-visible' : ''}`}>
       <div className="navbar-container">
-        {navItems.map(({ id, icon: Icon, label }) => (
-          <button
-            key={id}
-            className={`nav-item ${activeSection === id ? 'active' : ''}`}
-            onClick={() => scrollToSection(id)}
-          >
-            <Icon className="nav-icon" />
-            <span className="nav-label">{label}</span>
-          </button>
-        ))}
+        <div className="nav-items">
+          {navItems.map(({ id, icon: Icon, label }) => (
+            <button
+              key={id}
+              className={`nav-item ${activeSection === id ? 'active' : ''}`}
+              onClick={() => scrollToSection(id)}
+            >
+              <Icon className="nav-icon" />
+              <span className="nav-label">{label}</span>
+            </button>
+          ))}
+        </div>
+        
+        {/* Botón del carrito en la derecha */}
+        <button 
+          className="nav-item cart-nav-item"
+          onClick={onCartClick}
+        >
+          <div className="cart-icon-container">
+            <FaShoppingCart className="nav-icon" />
+            {itemCount > 0 && (
+              <span className="cart-badge">{itemCount}</span>
+            )}
+          </div>
+          <span className="nav-label">Carrito</span>
+        </button>
       </div>
     </nav>
   );

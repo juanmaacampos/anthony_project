@@ -1,0 +1,358 @@
+/* OrderStatus Page Styles */
+.order-status-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 2rem 0;
+}
+
+.order-status-card {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.order-status-main {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Header Styles */
+.order-status-header {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  padding: 2rem;
+}
+
+.order-status-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.order-status-id {
+  opacity: 0.9;
+  margin-bottom: 0.25rem;
+}
+
+.order-status-restaurant {
+  opacity: 0.9;
+}
+
+/* Status Grid */
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .status-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.status-card {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-card.pending { background-color: #fef3c7; }
+.status-card.confirmed { background-color: #d1fae5; }
+.status-card.preparing { background-color: #dbeafe; }
+.status-card.ready { background-color: #e9d5ff; }
+.status-card.completed { background-color: #dcfce7; }
+.status-card.cancelled { background-color: #fee2e2; }
+.status-card.paid { background-color: #d1fae5; }
+.status-card.failed { background-color: #fee2e2; }
+.status-card.processing { background-color: #dbeafe; }
+
+.status-icon {
+  font-size: 1.5rem;
+}
+
+.status-info h3 {
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.status-info p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.status-text.pending { color: #d97706; }
+.status-text.confirmed { color: #059669; }
+.status-text.preparing { color: #2563eb; }
+.status-text.ready { color: #7c3aed; }
+.status-text.completed { color: #16a34a; }
+.status-text.cancelled { color: #dc2626; }
+.status-text.paid { color: #059669; }
+.status-text.failed { color: #dc2626; }
+.status-text.processing { color: #2563eb; }
+
+/* Content Styles */
+.order-content {
+  padding: 2rem;
+}
+
+.section-divider {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1.5rem;
+}
+
+.section-title {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  font-size: 1.125rem;
+}
+
+.subsection-title {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Order Items */
+.order-items {
+  margin-bottom: 1.5rem;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.item-name {
+  font-weight: 500;
+}
+
+.item-quantity {
+  color: #6b7280;
+  margin-left: 0.5rem;
+}
+
+.item-price {
+  font-weight: 500;
+}
+
+/* Total */
+.order-total {
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.total-label {
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.total-amount {
+  font-weight: bold;
+  font-size: 1.25rem;
+  color: #059669;
+}
+
+/* Info Sections */
+.info-section {
+  margin-bottom: 1rem;
+}
+
+.info-content {
+  background-color: #f9fafb;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+}
+
+.info-content p {
+  margin: 0.25rem 0;
+}
+
+.info-label {
+  font-weight: 500;
+}
+
+/* Timestamps */
+.timestamps {
+  font-size: 0.875rem;
+  color: #6b7280;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.timestamps p {
+  margin: 0.25rem 0;
+}
+
+/* Actions */
+.order-actions {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.back-button {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.back-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+/* Loading States */
+.loading-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: #6b7280;
+}
+
+/* Error States */
+.error-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  max-width: 28rem;
+  width: 100%;
+  margin: 0 1rem;
+}
+
+.error-content {
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.error-message {
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.retry-button {
+  background: #4f46e5;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.retry-button:hover {
+  background: #4338ca;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .order-status-container {
+    padding: 1rem 0;
+  }
+  
+  .order-status-header {
+    padding: 1.5rem;
+  }
+  
+  .order-content {
+    padding: 1.5rem;
+  }
+  
+  .order-status-title {
+    font-size: 1.25rem;
+  }
+  
+  .status-grid {
+    gap: 0.75rem;
+  }
+  
+  .status-card {
+    padding: 0.75rem;
+  }
+  
+  .order-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .total-row {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}

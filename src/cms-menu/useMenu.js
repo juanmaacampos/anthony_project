@@ -110,10 +110,24 @@ export function useCart() {
     }
   });
 
-  // Save cart to localStorage whenever it changes
+  // Listen for cart updates from other instances
+  useEffect(() => {
+    const handleCartUpdate = (event) => {
+      console.log('🔄 Received cart update event:', event.detail);
+      setCart(event.detail);
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, []);
+
+  // Save cart to localStorage and dispatch event whenever it changes
   useEffect(() => {
     try {
       localStorage.setItem('restaurant-cart', JSON.stringify(cart));
+      // Dispatch custom event to sync all cart instances
+      console.log('📢 Dispatching cart update event:', cart);
+      window.dispatchEvent(new CustomEvent('cartUpdated', { detail: cart }));
     } catch (error) {
       console.warn('Error saving cart to localStorage:', error);
     }
@@ -121,6 +135,7 @@ export function useCart() {
 
   const addToCart = (item, quantity = 1) => {
     console.log('🛒 Adding to cart:', item, 'quantity:', quantity);
+    console.log('🛒 Current cart before adding:', cart);
     
     setCart(prevCart => {
       const existingItem = prevCart.find(cartItem => cartItem.id === item.id);

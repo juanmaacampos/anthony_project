@@ -10,17 +10,16 @@ export const MENU_CONFIG = {
   },
   
   // UID del restaurante configurado
-  restaurantId: "HsuTZWhRVkT88a0WOztELGzJUhl1",
+  restaurantId: "jPPrsWekGnaQKT190UtuX0VAUFL2", // Debe coincidir con el Secret Manager
   
-  // MercadoPago configuration - DESHABILITADO TEMPORALMENTE
+  // MercadoPago configuration - PRODUCCIÓN
   mercadoPago: {
-    publicKey: "TEST-public-key", // Usar credenciales de prueba por ahora
-    accessToken: "TEST-access-token",
+    publicKey: "APP_USR-6359a306-23ca-4d23-924e-b72a3fd1816f", // Tu public key de producción
     currency: "ARS",
-    enabled: false // Deshabilitar por ahora
+    enabled: true // Habilitado para producción
   },
   
-  // URLs de tu aplicación
-  baseUrl: "http://localhost:5173", // Para desarrollo local
-  backendUrl: "http://localhost:3001" // Para cuando implementes el backend
+  // URLs de tu aplicación - PRODUCCIÓN
+  baseUrl: "https://juanmaacampos.github.io/restaurant_template", // URL de producción GitHub Pages
+  backendUrl: "https://us-central1-cms-menu-7b4a4.cloudfunctions.net" // Cloud Functions URL
 };

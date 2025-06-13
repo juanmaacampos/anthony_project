@@ -2,24 +2,26 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MenuDisplay } from '../../cms-menu/MenuComponents.jsx';
-import { useMenuIntegration } from '../../cms-menu/useMenu.js';
+import { useMenu } from '../../cms-menu/useMenu.js';
 import { MENU_CONFIG } from '../../cms-menu/config.js';
+import { menuSDKManager } from '../../cms-menu/menu-sdk-singleton.js';
 import Cart from '../checkout/Cart';
 import '../../styles/sections/Menu.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Menu = () => {
+const Menu = ({ cart, addToCart, updateQuantity, removeFromCart, clearCart, total, itemCount, firebaseManager }) => {
   const menuRef = useRef(null);
   const titleRef = useRef(null);
   const [showCart, setShowCart] = useState(false);
 
-  // CMS Menu Integration - Always enabled
-  const { menu, loading, error, cart, addToCart, updateQuantity, removeFromCart, clearCart, total, itemCount, firebaseManager } = useMenuIntegration(MENU_CONFIG, { enabled: true });
+  // Use the same SDK instance as App.jsx
+  const menuSDK = menuSDKManager.getInstance(MENU_CONFIG.firebaseConfig, MENU_CONFIG.restaurantId);
+  const { menu, loading, error } = useMenu(menuSDK, { enabled: true });
 
   // Debug cart changes
   useEffect(() => {
-    console.log('🛒 Cart updated:', cart, 'Total items:', itemCount);
+    console.log('🛒 Menu - Cart updated:', cart, 'Total items:', itemCount);
   }, [cart, itemCount]);
 
   useEffect(() => {
