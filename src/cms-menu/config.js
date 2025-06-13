@@ -23,3 +23,5 @@ export const MENU_CONFIG = {
   baseUrl: "https://juanmaacampos.github.io/restaurant_template", // URL de producción GitHub Pages
   backendUrl: "https://us-central1-cms-menu-7b4a4.cloudfunctions.net" // Cloud Functions URL
 };
+
+//note
