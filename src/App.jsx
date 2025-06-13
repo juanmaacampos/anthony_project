@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import React, { useState, useEffect } from 'react'
 import { Header, Footer } from './components/layout'
 import { Menu, Location, Contact } from './components/sections'
