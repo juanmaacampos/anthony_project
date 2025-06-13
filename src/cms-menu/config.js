@@ -10,7 +10,7 @@ export const MENU_CONFIG = {
   },
   
   // UID del restaurante configurado
-  restaurantId: "jPPrsWekGnaQKT190UtuX0VAUFL2", // Debe coincidir con el Secret Manager
+  restaurantId: "HsuTZWhRVkT88a0WOztELGzJUhl1", // Debe coincidir con el Secret Manager
   
   // MercadoPago configuration - PRODUCCIÓN
   mercadoPago: {
