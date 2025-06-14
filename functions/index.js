@@ -352,3 +352,171 @@ async function handlePaymentNotification(paymentId) {
     throw error;
   }
 }
+
+/**
+ * HTTP Function para crear preferencias de MercadoPago (para testing directo)
+ * Compatible con llamadas HTTP directas como curl
+ */
+exports.createMercadoPagoPreferenceHTTP = onRequest(async (req, res) => {
+  try {
+    // Configurar CORS
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      res.status(204).send('');
+      return;
+    }
+
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+
+    logger.info("🔄 Creating MercadoPago preference via HTTP...", { body: req.body });
+
+    // Extract data from request body
+    const { 
+      restaurantId = 'HsuTZWhRVkT88a0WOztELGzJUhl1', // Default for testing
+      items, 
+      payer,
+      customer,
+      totalAmount,
+      orderId = `order_${Date.now()}`, // Generate if not provided
+      backUrls = {
+        success: 'https://juanmaacampos.github.io/restaurant_template/success',
+        pending: 'https://juanmaacampos.github.io/restaurant_template/pending',
+        failure: 'https://juanmaacampos.github.io/restaurant_template/failure'
+      },
+      notes = ""
+    } = req.body;
+
+    // Basic validation
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      res.status(400).json({ error: 'items is required and must be a non-empty array' });
+      return;
+    }
+
+    // Calculate total if not provided
+    let calculatedTotal = totalAmount;
+    if (!calculatedTotal) {
+      calculatedTotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+    }
+
+    // Use payer or customer info
+    const customerInfo = customer || payer || {};
+
+    logger.info("✅ Input validation passed for HTTP request");
+
+    // Get Access Token from Secret Manager
+    const secretName = `MERCADOPAGO_ACCESS_TOKEN_${restaurantId}`;
+    const projectId = process.env.GCLOUD_PROJECT;
+    const secretPath = `projects/${projectId}/secrets/${secretName}/versions/latest`;
+
+    let accessToken;
+    try {
+      logger.info(`🔐 Fetching secret: ${secretName}`);
+      const [version] = await secretClient.accessSecretVersion({
+        name: secretPath,
+      });
+      accessToken = version.payload.data.toString();
+      logger.info("✅ Access token retrieved successfully");
+    } catch (error) {
+      logger.error("❌ Failed to retrieve access token from Secret Manager:", error);
+      res.status(500).json({ 
+        error: `Failed to retrieve MercadoPago access token for restaurant ${restaurantId}` 
+      });
+      return;
+    }
+
+    // Configure MercadoPago SDK
+    const client = new mercadopago.MercadoPagoConfig({
+      accessToken: accessToken,
+    });
+    const preference = new mercadopago.Preference(client);
+
+    logger.info("✅ MercadoPago SDK configured for HTTP request");
+
+    // Save order to Firestore
+    const orderData = {
+      restaurantId,
+      items,
+      customer: customerInfo,
+      totalAmount: calculatedTotal,
+      status: 'pending',
+      paymentStatus: 'pending',
+      notes,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    await db.collection('orders').doc(orderId).set(orderData);
+    logger.info(`✅ Order saved to Firestore: ${orderId}`);
+
+    // Prepare MercadoPago preference data
+    const preferenceData = {
+      items: items.map(item => ({
+        title: item.title || item.name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        currency_id: 'ARS'
+      })),
+      payer: {
+        name: customerInfo.name || 'Customer',
+        surname: customerInfo.surname || customerInfo.lastname || '',
+        email: customerInfo.email || 'test@test.com',
+        phone: customerInfo.phone ? {
+          area_code: '',
+          number: customerInfo.phone
+        } : undefined
+      },
+      external_reference: orderId,
+      back_urls: backUrls,
+      auto_return: 'approved',
+      notification_url: 'https://us-central1-cms-menu-7b4a4.cloudfunctions.net/mercadoPagoWebhookV2',
+      metadata: {
+        restaurant_id: restaurantId,
+        order_id: orderId
+      }
+    };
+
+    logger.info("🔄 Creating MercadoPago preference...", { preferenceData });
+
+    const mpResponse = await preference.create({ body: preferenceData });
+    
+    if (!mpResponse || !mpResponse.id || !mpResponse.init_point) {
+      throw new Error('Invalid response from MercadoPago API');
+    }
+
+    logger.info("✅ MercadoPago preference created:", { 
+      preferenceId: mpResponse.id, 
+      initPoint: mpResponse.init_point 
+    });
+
+    // Update order with MercadoPago preference ID
+    await db.collection('orders').doc(orderId).update({
+      mpPreferenceId: mpResponse.id,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    logger.info(`✅ Order updated with MercadoPago preference ID: ${mpResponse.id}`);
+
+    // Return response
+    res.status(200).json({
+      success: true,
+      init_point: mpResponse.init_point,
+      preference_id: mpResponse.id,
+      order_id: orderId
+    });
+
+  } catch (error) {
+    logger.error("❌ Error creating MercadoPago preference via HTTP:", error);
+    res.status(500).json({
+      error: 'Failed to create MercadoPago preference',
+      message: error.message
+    });
+  }
+});

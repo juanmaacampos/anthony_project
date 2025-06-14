@@ -40,29 +40,59 @@ export class PaymentService {
       // Validar datos requeridos
       this._validateOrderData(orderData);
 
-      // Llamar a Cloud Function
-      const createPreference = httpsCallable(this.functions, 'createMercadoPagoPreference');
-      
-      const result = await createPreference({
-        restaurantId: orderData.restaurantId,
-        items: orderData.items,
-        customer: orderData.customer,
-        totalAmount: orderData.totalAmount,
-        orderId: orderData.orderId,
-        backUrls: orderData.backUrls,
-        notes: orderData.notes || ''
-      });
+      try {
+        // Llamar a Cloud Function (onCall)
+        const createPreference = httpsCallable(this.functions, 'createMercadoPagoPreference');
+        
+        const result = await createPreference({
+          restaurantId: orderData.restaurantId,
+          items: orderData.items,
+          customer: orderData.customer,
+          totalAmount: orderData.totalAmount,
+          orderId: orderData.orderId,
+          backUrls: orderData.backUrls,
+          notes: orderData.notes || ''
+        });
 
-      if (result.data.success) {
-        console.log('✅ MercadoPago preference created:', result.data);
-        return {
-          success: true,
-          init_point: result.data.init_point,
-          preference_id: result.data.preference_id,
-          order_id: result.data.order_id
-        };
-      } else {
-        throw new Error('Failed to create payment preference');
+        if (result.data.success) {
+          console.log('✅ MercadoPago preference created:', result.data);
+          return {
+            success: true,
+            init_point: result.data.init_point,
+            preference_id: result.data.preference_id,
+            order_id: result.data.order_id
+          };
+        } else {
+          throw new Error('Failed to create payment preference');
+        }
+      } catch (firebaseError) {
+        console.warn('⚠️ Firebase callable failed, trying HTTP fallback:', firebaseError);
+        
+        // Fallback to HTTP function
+        const response = await fetch('https://us-central1-cms-menu-7b4a4.cloudfunctions.net/createMercadoPagoPreferenceHTTP', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            restaurantId: orderData.restaurantId,
+            items: orderData.items,
+            payer: orderData.customer,
+            totalAmount: orderData.totalAmount,
+            orderId: orderData.orderId,
+            backUrls: orderData.backUrls,
+            notes: orderData.notes || ''
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`HTTP function failed: ${errorData.message || response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ MercadoPago preference created via HTTP:', result);
+        return result;
       }
 
     } catch (error) {
