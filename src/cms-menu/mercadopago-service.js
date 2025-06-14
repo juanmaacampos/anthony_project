@@ -71,9 +71,9 @@ class MercadoPagoService {
           }
         },
         back_urls: {
-          success: `${MENU_CONFIG.baseUrl}/payment/success?order_id=${orderData.orderId}`,
-          failure: `${MENU_CONFIG.baseUrl}/payment/failure?order_id=${orderData.orderId}`,
-          pending: `${MENU_CONFIG.baseUrl}/payment/pending?order_id=${orderData.orderId}`
+          success: `${MENU_CONFIG.baseUrl}/payment/success?order=${orderData.orderId}`,
+          failure: `${MENU_CONFIG.baseUrl}/payment/failure?order=${orderData.orderId}`,
+          pending: `${MENU_CONFIG.baseUrl}/payment/pending?order=${orderData.orderId}`
         },
         auto_return: 'approved',
         external_reference: orderData.orderId,

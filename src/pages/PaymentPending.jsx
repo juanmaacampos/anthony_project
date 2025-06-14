@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { globalFirebaseManager } from '../cms-menu/firebase-manager';
 import './PaymentPending.css';
 
@@ -10,36 +10,93 @@ const PaymentPending = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const orderId = searchParams.get('order');
+  const orderId = searchParams.get('order') || searchParams.get('external_reference');
+  const paymentId = searchParams.get('payment_id');
+  const status = searchParams.get('status');
+  const collectionStatus = searchParams.get('collection_status');
 
   useEffect(() => {
-    const loadOrder = async () => {
+    const loadAndUpdateOrder = async () => {
+      console.log('🔍 PaymentPending: Starting with params:', {
+        orderId,
+        paymentId,
+        status,
+        collectionStatus,
+        allSearchParams: Object.fromEntries(searchParams.entries())
+      });
+
       if (!orderId) {
+        console.error('❌ PaymentPending: No orderId found');
         setError('No se encontró el ID del pedido');
         setLoading(false);
         return;
       }
 
+      // Verificar si el estado indica que debe ir a otra página
+      if (status === 'approved' || collectionStatus === 'approved') {
+        console.warn('⚠️ PaymentPending: Payment approved, redirecting to success page');
+        window.location.href = `/restaurant_template/payment/success?order=${orderId}&payment_id=${paymentId}&status=${status}&collection_status=${collectionStatus}`;
+        return;
+      }
+
+      if (status === 'rejected' || status === 'cancelled' || collectionStatus === 'rejected' || collectionStatus === 'cancelled') {
+        console.warn('⚠️ PaymentPending: Payment failed, redirecting to failure page');
+        window.location.href = `/restaurant_template/payment/failure?order=${orderId}&payment_id=${paymentId}&status=${status}&collection_status=${collectionStatus}`;
+        return;
+      }
+
       try {
+        console.log('⏳ Processing pending payment for order:', orderId);
+        console.log('📄 Payment details:', { paymentId, status, collectionStatus });
+
         await globalFirebaseManager.initialize();
         const db = globalFirebaseManager.getDatabase();
-        const orderDoc = await getDoc(doc(db, 'orders', orderId));
+        const orderRef = doc(db, 'orders', orderId);
+        const orderDoc = await getDoc(orderRef);
         
         if (orderDoc.exists()) {
-          setOrder({ id: orderDoc.id, ...orderDoc.data() });
+          const orderData = { id: orderDoc.id, ...orderDoc.data() };
+          console.log('📋 Order data found:', orderData);
+          setOrder(orderData);
+
+          // Actualizar el estado si hay información nueva de MercadoPago
+          if (paymentId && orderData.paymentId !== paymentId) {
+            console.log('⏳ Updating order with pending payment info');
+            await updateDoc(orderRef, {
+              paymentStatus: 'pending',
+              paymentId: paymentId,
+              updatedAt: serverTimestamp(),
+              mercadopagoData: {
+                payment_id: paymentId,
+                status: status,
+                collection_status: collectionStatus,
+                processed_at: serverTimestamp()
+              }
+            });
+
+            // Actualizar el estado local
+            setOrder(prev => ({
+              ...prev,
+              paymentStatus: 'pending',
+              paymentId: paymentId
+            }));
+          } else {
+            console.log('⏳ No update needed for pending payment');
+          }
         } else {
+          console.error('❌ PaymentPending: Order not found in Firestore:', orderId);
           setError('Pedido no encontrado');
         }
       } catch (err) {
-        console.error('Error loading order:', err);
-        setError('Error al cargar el pedido');
+        console.error('❌ Error loading/updating order:', err);
+        setError('Error al procesar el pedido');
       } finally {
         setLoading(false);
       }
     };
 
-    loadOrder();
-  }, [orderId]);
+    loadAndUpdateOrder();
+  }, [orderId, paymentId, status, collectionStatus]);
 
   if (loading) {
     return (
@@ -71,9 +128,26 @@ const PaymentPending = () => {
         {order && (
           <div className="order-details">
             <h3>Detalles del Pedido</h3>
-            <p><strong>Número de pedido:</strong> {order.id}</p>
-            <p><strong>Total:</strong> ${order.total?.toFixed(2)} ARS</p>
-            <p><strong>Estado del pago:</strong> Pendiente</p>
+            <div className="order-info">
+              <div className="order-info-item">
+                <span>Número de pedido:</span>
+                <span>{order.id}</span>
+              </div>
+              <div className="order-info-item">
+                <span>Total:</span>
+                <span>${order.total?.toFixed(2)} ARS</span>
+              </div>
+              <div className="order-info-item">
+                <span>Estado del pago:</span>
+                <span style={{ color: '#ffc107', fontWeight: 'bold' }}>⏳ Pendiente</span>
+              </div>
+              {paymentId && (
+                <div className="order-info-item">
+                  <span>ID de pago:</span>
+                  <span>{paymentId}</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
         
@@ -86,7 +160,7 @@ const PaymentPending = () => {
         
         <div className="action-buttons">
           <Link to="/" className="btn btn-primary">Volver al menú</Link>
-          <Link to={`/order-status?order=${orderId}`} className="btn btn-secondary">
+          <Link to={`/estado-pedido?orderId=${orderId}`} className="btn btn-secondary">
             Ver estado del pedido
           </Link>
         </div>

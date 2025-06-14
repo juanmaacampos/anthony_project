@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { globalFirebaseManager } from '../cms-menu/firebase-manager';
 import './PaymentFailure.css';
 
@@ -10,36 +10,103 @@ const PaymentFailure = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const orderId = searchParams.get('order');
+  const orderId = searchParams.get('order') || searchParams.get('external_reference');
+  const paymentId = searchParams.get('payment_id');
+  const status = searchParams.get('status');
+  const collectionStatus = searchParams.get('collection_status');
 
   useEffect(() => {
-    const loadOrder = async () => {
+    const loadAndUpdateOrder = async () => {
+      console.log('🔍 PaymentFailure: Starting with params:', {
+        orderId,
+        paymentId,
+        status,
+        collectionStatus,
+        allSearchParams: Object.fromEntries(searchParams.entries())
+      });
+
       if (!orderId) {
+        console.error('❌ PaymentFailure: No orderId found');
         setError('No se encontró el ID del pedido');
         setLoading(false);
         return;
       }
 
+      // Verificar que realmente el pago falló según MercadoPago
+      const isPaymentFailed = (
+        status === 'rejected' || 
+        status === 'cancelled' ||
+        collectionStatus === 'rejected' ||
+        collectionStatus === 'cancelled'
+      );
+
+      if (!isPaymentFailed) {
+        console.warn('⚠️ PaymentFailure: Payment not actually failed, redirecting to appropriate page');
+        console.log('Status details:', { status, collectionStatus });
+        
+        // Redirigir a la página correcta según el estado
+        if (status === 'approved' || collectionStatus === 'approved') {
+          window.location.href = `/restaurant_template/payment/success?order=${orderId}&payment_id=${paymentId}&status=${status}&collection_status=${collectionStatus}`;
+        } else {
+          window.location.href = `/restaurant_template/payment/pending?order=${orderId}&payment_id=${paymentId}&status=${status}&collection_status=${collectionStatus}`;
+        }
+        return;
+      }
+
       try {
+        console.log('❌ Processing failed payment for order:', orderId);
+        console.log('📄 Payment details:', { paymentId, status, collectionStatus });
+
         await globalFirebaseManager.initialize();
         const db = globalFirebaseManager.getDatabase();
-        const orderDoc = await getDoc(doc(db, 'orders', orderId));
+        const orderRef = doc(db, 'orders', orderId);
+        const orderDoc = await getDoc(orderRef);
         
         if (orderDoc.exists()) {
-          setOrder({ id: orderDoc.id, ...orderDoc.data() });
+          const orderData = { id: orderDoc.id, ...orderDoc.data() };
+          console.log('📋 Order data found:', orderData);
+          setOrder(orderData);
+
+          // Actualizar el estado del pedido a fallido
+          if (orderData.paymentStatus !== 'failed') {
+            console.log('❌ Updating order payment status to failed');
+            await updateDoc(orderRef, {
+              paymentStatus: 'failed',
+              status: 'payment_failed',
+              paymentId: paymentId,
+              updatedAt: serverTimestamp(),
+              mercadopagoData: {
+                payment_id: paymentId,
+                status: status,
+                collection_status: collectionStatus,
+                processed_at: serverTimestamp()
+              }
+            });
+
+            // Actualizar el estado local
+            setOrder(prev => ({
+              ...prev,
+              paymentStatus: 'failed',
+              status: 'payment_failed',
+              paymentId: paymentId
+            }));
+          } else {
+            console.log('⚠️ Order already marked as failed');
+          }
         } else {
+          console.error('❌ PaymentFailure: Order not found in Firestore:', orderId);
           setError('Pedido no encontrado');
         }
       } catch (err) {
-        console.error('Error loading order:', err);
-        setError('Error al cargar el pedido');
+        console.error('❌ Error loading/updating order:', err);
+        setError('Error al procesar el pedido');
       } finally {
         setLoading(false);
       }
     };
 
-    loadOrder();
-  }, [orderId]);
+    loadAndUpdateOrder();
+  }, [orderId, paymentId, status, collectionStatus]);
 
   if (loading) {
     return (
@@ -71,9 +138,26 @@ const PaymentFailure = () => {
         {order && (
           <div className="order-details">
             <h3>Detalles del Pedido</h3>
-            <p><strong>Número de pedido:</strong> {order.id}</p>
-            <p><strong>Total:</strong> ${order.total?.toFixed(2)} ARS</p>
-            <p><strong>Estado:</strong> Pago fallido</p>
+            <div className="order-info">
+              <div className="order-info-item">
+                <span>Número de pedido:</span>
+                <span>{order.id}</span>
+              </div>
+              <div className="order-info-item">
+                <span>Total:</span>
+                <span>${order.total?.toFixed(2)} ARS</span>
+              </div>
+              <div className="order-info-item">
+                <span>Estado del pago:</span>
+                <span style={{ color: '#dc3545', fontWeight: 'bold' }}>❌ Falló</span>
+              </div>
+              {paymentId && (
+                <div className="order-info-item">
+                  <span>ID de pago:</span>
+                  <span>{paymentId}</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
         
@@ -87,7 +171,10 @@ const PaymentFailure = () => {
         
         <div className="action-buttons">
           <Link to="/" className="btn btn-primary">Volver al menú</Link>
-          <Link to="/" className="btn btn-secondary">Intentar nuevamente</Link>
+          <Link to="/" className="btn btn-warning">Intentar nuevamente</Link>
+          <Link to={`/estado-pedido?orderId=${orderId}`} className="btn btn-secondary">
+            Ver estado del pedido
+          </Link>
         </div>
       </div>
     </div>

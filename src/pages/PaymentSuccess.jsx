@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { globalFirebaseManager } from '../cms-menu/firebase-manager';
 import './PaymentSuccess.css';
 
@@ -10,36 +10,101 @@ const PaymentSuccess = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const orderId = searchParams.get('order');
+  const orderId = searchParams.get('order') || searchParams.get('external_reference');
+  const paymentId = searchParams.get('payment_id');
+  const status = searchParams.get('status');
+  const collectionStatus = searchParams.get('collection_status');
 
   useEffect(() => {
-    const loadOrder = async () => {
+    const loadAndUpdateOrder = async () => {
+      console.log('🔍 PaymentSuccess: Starting with params:', {
+        orderId,
+        paymentId,
+        status,
+        collectionStatus,
+        allSearchParams: Object.fromEntries(searchParams.entries())
+      });
+
       if (!orderId) {
+        console.error('❌ PaymentSuccess: No orderId found');
         setError('No se encontró el ID del pedido');
         setLoading(false);
         return;
       }
 
+      // Verificar que realmente el pago fue exitoso según MercadoPago
+      const isPaymentApproved = (
+        status === 'approved' || 
+        collectionStatus === 'approved'
+      );
+
+      if (!isPaymentApproved) {
+        console.warn('⚠️ PaymentSuccess: Payment not approved, redirecting to appropriate page');
+        console.log('Status details:', { status, collectionStatus });
+        
+        // Redirigir a la página correcta según el estado
+        if (status === 'pending' || collectionStatus === 'pending') {
+          window.location.href = `/restaurant_template/payment/pending?order=${orderId}&payment_id=${paymentId}&status=${status}&collection_status=${collectionStatus}`;
+        } else {
+          window.location.href = `/restaurant_template/payment/failure?order=${orderId}&payment_id=${paymentId}&status=${status}&collection_status=${collectionStatus}`;
+        }
+        return;
+      }
+
       try {
+        console.log('💳 Processing successful payment for order:', orderId);
+        console.log('📄 Payment details:', { paymentId, status, collectionStatus });
+
         await globalFirebaseManager.initialize();
         const db = globalFirebaseManager.getDatabase();
-        const orderDoc = await getDoc(doc(db, 'orders', orderId));
+        const orderRef = doc(db, 'orders', orderId);
+        const orderDoc = await getDoc(orderRef);
         
         if (orderDoc.exists()) {
-          setOrder({ id: orderDoc.id, ...orderDoc.data() });
+          const orderData = { id: orderDoc.id, ...orderDoc.data() };
+          console.log('📋 Order data found:', orderData);
+          setOrder(orderData);
+
+          // Actualizar el estado del pedido a pagado si no está ya actualizado
+          if (orderData.paymentStatus !== 'paid') {
+            console.log('✅ Updating order payment status to paid');
+            await updateDoc(orderRef, {
+              paymentStatus: 'paid',
+              status: 'confirmed',
+              paymentId: paymentId,
+              updatedAt: serverTimestamp(),
+              mercadopagoData: {
+                payment_id: paymentId,
+                status: status,
+                collection_status: collectionStatus,
+                processed_at: serverTimestamp()
+              }
+            });
+
+            // Actualizar el estado local
+            setOrder(prev => ({
+              ...prev,
+              paymentStatus: 'paid',
+              status: 'confirmed',
+              paymentId: paymentId
+            }));
+          } else {
+            console.log('✅ Order already marked as paid');
+          }
         } else {
+          console.error('❌ PaymentSuccess: Order not found in Firestore:', orderId);
           setError('Pedido no encontrado');
         }
       } catch (err) {
-        console.error('Error loading order:', err);
-        setError('Error al cargar el pedido');
+        console.error('❌ Error loading/updating order:', err);
+        setError('Error al procesar el pedido');
       } finally {
         setLoading(false);
       }
     };
 
-    loadOrder();
-  }, [orderId]);
+    loadAndUpdateOrder();
+  }, [orderId, paymentId, status, collectionStatus]);
 
   if (loading) {
     return (
@@ -71,19 +136,52 @@ const PaymentSuccess = () => {
         {order && (
           <div className="order-details">
             <h3>Detalles del Pedido</h3>
-            <p><strong>Número de pedido:</strong> {order.id}</p>
-            <p><strong>Total pagado:</strong> ${order.total?.toFixed(2)} ARS</p>
-            <p><strong>Estado:</strong> {order.status === 'confirmed' ? 'Confirmado' : 'Pendiente'}</p>
-            
-            <div className="order-items">
-              <h4>Items:</h4>
-              {order.items?.map((item, index) => (
-                <div key={index} className="order-item">
-                  <span>{item.name} x{item.quantity}</span>
-                  <span>${(item.price * item.quantity).toFixed(2)}</span>
+            <div className="order-info">
+              <div className="order-info-item">
+                <span>Número de pedido:</span>
+                <span>{order.id}</span>
+              </div>
+              <div className="order-info-item">
+                <span>Total pagado:</span>
+                <span>${order.total?.toFixed(2)} ARS</span>
+              </div>
+              <div className="order-info-item">
+                <span>Estado del pago:</span>
+                <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Pagado</span>
+              </div>
+              <div className="order-info-item">
+                <span>Estado del pedido:</span>
+                <span style={{ color: '#28a745', fontWeight: 'bold' }}>✅ Confirmado</span>
+              </div>
+              {paymentId && (
+                <div className="order-info-item">
+                  <span>ID de pago:</span>
+                  <span>{paymentId}</span>
                 </div>
-              ))}
+              )}
             </div>
+            
+            {order.items && order.items.length > 0 && (
+              <div className="order-items">
+                <h4>Items del pedido:</h4>
+                {order.items.map((item, index) => (
+                  <div key={index} className="order-info-item">
+                    <span>{item.name} x{item.quantity}</span>
+                    <span>${((item.unit_price || item.price) * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {order.customer && (
+              <div className="customer-info">
+                <h4>Información de contacto:</h4>
+                <p><strong>Nombre:</strong> {order.customer.name}</p>
+                <p><strong>Teléfono:</strong> {order.customer.phone}</p>
+                {order.customer.email && <p><strong>Email:</strong> {order.customer.email}</p>}
+                {order.customer.address && <p><strong>Dirección:</strong> {order.customer.address}</p>}
+              </div>
+            )}
           </div>
         )}
         
@@ -96,6 +194,11 @@ const PaymentSuccess = () => {
         
         <div className="action-buttons">
           <Link to="/" className="btn btn-primary">Volver al menú</Link>
+          {orderId && (
+            <Link to={`/estado-pedido?orderId=${orderId}`} className="btn btn-secondary">
+              Ver estado del pedido
+            </Link>
+          )}
         </div>
       </div>
     </div>

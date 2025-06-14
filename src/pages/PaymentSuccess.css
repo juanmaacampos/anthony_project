@@ -42,7 +42,8 @@
 }
 
 .order-info {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
@@ -58,6 +59,33 @@
   border-bottom: none;
   font-weight: bold;
   color: #28a745;
+}
+
+.order-items {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.order-items h4 {
+  margin-bottom: 0.5rem;
+  color: #495057;
+}
+
+.customer-info {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.customer-info h4 {
+  margin-bottom: 0.5rem;
+  color: #495057;
+}
+
+.customer-info p {
+  margin: 0.25rem 0;
+  color: #666;
 }
 
 .action-buttons {
