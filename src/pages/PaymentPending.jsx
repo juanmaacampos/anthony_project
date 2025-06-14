@@ -35,6 +35,7 @@ const PaymentPending = () => {
       // Verificar si el estado indica que debe ir a otra página
       if (status === 'approved' || collectionStatus === 'approved') {
         console.warn('⚠️ PaymentPending: Payment approved, redirecting to success page');
+        alert('¡Tu pago fue aprobado! Te redirigiremos a la página de confirmación.');
         window.location.href = `/restaurant_template/payment/success?order=${orderId}&payment_id=${paymentId}&status=${status}&collection_status=${collectionStatus}`;
         return;
       }
@@ -43,6 +44,33 @@ const PaymentPending = () => {
         console.warn('⚠️ PaymentPending: Payment failed, redirecting to failure page');
         window.location.href = `/restaurant_template/payment/failure?order=${orderId}&payment_id=${paymentId}&status=${status}&collection_status=${collectionStatus}`;
         return;
+      }
+
+      // VERIFICACIÓN ADICIONAL: Buscar en Firebase el estado real del pago
+      try {
+        await globalFirebaseManager.initialize();
+        const db = globalFirebaseManager.getDatabase();
+        const orderRef = doc(db, 'orders', orderId);
+        const orderDoc = await getDoc(orderRef);
+        
+        if (orderDoc.exists()) {
+          const orderData = orderDoc.data();
+          // Si en Firebase el pago está marcado como exitoso, redirigir
+          if (orderData.paymentStatus === 'paid' || orderData.status === 'confirmed') {
+            console.warn('🔄 Payment was actually successful according to Firebase, redirecting...');
+            alert('¡Tu pago fue procesado exitosamente! Te redirigiremos a la página correcta.');
+            window.location.href = `/restaurant_template/payment/success?order=${orderId}&payment_id=${paymentId}`;
+            return;
+          }
+          // Si está marcado como fallido, redirigir a failure
+          if (orderData.paymentStatus === 'failed' || orderData.status === 'payment_failed') {
+            console.warn('🔄 Payment failed according to Firebase, redirecting...');
+            window.location.href = `/restaurant_template/payment/failure?order=${orderId}&payment_id=${paymentId}`;
+            return;
+          }
+        }
+      } catch (dbError) {
+        console.warn('⚠️ Could not verify payment status from Firebase:', dbError);
       }
 
       try {

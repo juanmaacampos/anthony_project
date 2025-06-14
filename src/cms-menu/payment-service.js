@@ -111,10 +111,11 @@ export class PaymentService {
     // Usar siempre la URL de producción para las URLs de retorno
     const prodBaseUrl = "https://juanmaacampos.github.io/restaurant_template";
     
+    // MercadoPago reemplaza automáticamente estos placeholders
     return {
-      success: `${prodBaseUrl}/payment/success?order=${orderId}`,
-      pending: `${prodBaseUrl}/payment/pending?order=${orderId}`,
-      failure: `${prodBaseUrl}/payment/failure?order=${orderId}`
+      success: `${prodBaseUrl}/payment/success?order=${orderId}&payment_id={{payment_id}}&status={{status}}&collection_status={{collection_status}}&source=mp_redirect`,
+      pending: `${prodBaseUrl}/payment/pending?order=${orderId}&payment_id={{payment_id}}&status={{status}}&collection_status={{collection_status}}&source=mp_redirect`,
+      failure: `${prodBaseUrl}/payment/failure?order=${orderId}&payment_id={{payment_id}}&status={{status}}&collection_status={{collection_status}}&source=mp_redirect`
     };
   }
 

@@ -139,16 +139,20 @@ exports.createMercadoPagoPreference = onCall(async (request) => {
         pending: backUrls.pending,
         failure: backUrls.failure
       },
-      auto_return: "approved",
+      auto_return: "approved", // Solo auto-redirige en pagos aprobados
       external_reference: orderId,
       notification_url: `https://us-central1-cms-menu-7b4a4.cloudfunctions.net/mercadoPagoWebhookV2`,
+      statement_descriptor: "RESTAURANTE",
       metadata: {
         restaurant_id: restaurantId,
         order_id: orderId
       }
     };
 
-    logger.info("🔄 Creating MercadoPago preference...", { preferenceData });
+    logger.info("🔄 Creating MercadoPago preference...", { 
+      preferenceData,
+      backUrls: backUrls
+    });
 
     const mpResponse = await preference.create({ body: preferenceData });
     

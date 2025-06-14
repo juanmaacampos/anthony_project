@@ -35,19 +35,30 @@ const WebhookHandler = () => {
       merchant_account_id
     });
 
+    // Log para debugging
+    console.log('📍 WebhookHandler: Current URL:', window.location.href);
+    console.log('📍 WebhookHandler: All search params:', Object.fromEntries(searchParams.entries()));
+
     // Redirigir basado en el estado del pago
     const orderId = external_reference;
     const baseUrl = '/restaurant_template';
     
+    // Agregar parámetros adicionales para debugging
+    const debugParams = `&payment_id=${payment_id || 'none'}&status=${status || 'none'}&collection_status=${collection_status || 'none'}&source=webhook`;
+    
     if (status === 'approved' || collection_status === 'approved') {
-      window.location.href = `${baseUrl}/payment/success?order=${orderId}`;
+      console.log('✅ WebhookHandler: Redirecting to SUCCESS page');
+      window.location.href = `${baseUrl}/payment/success?order=${orderId}${debugParams}`;
     } else if (status === 'pending' || collection_status === 'pending') {
-      window.location.href = `${baseUrl}/payment/pending?order=${orderId}`;
+      console.log('⏳ WebhookHandler: Redirecting to PENDING page');
+      window.location.href = `${baseUrl}/payment/pending?order=${orderId}${debugParams}`;
     } else if (status === 'rejected' || status === 'cancelled' || collection_status === 'rejected') {
-      window.location.href = `${baseUrl}/payment/failure?order=${orderId}`;
+      console.log('❌ WebhookHandler: Redirecting to FAILURE page');
+      window.location.href = `${baseUrl}/payment/failure?order=${orderId}${debugParams}`;
     } else {
-      // Si no hay estado claro, redirigir a pendiente
-      window.location.href = `${baseUrl}/payment/pending?order=${orderId}`;
+      console.log('❓ WebhookHandler: Unclear status, redirecting to DEBUG page');
+      // Si no hay estado claro, redirigir a debug
+      window.location.href = `${baseUrl}/payment/debug?order=${orderId}${debugParams}`;
     }
   }, [searchParams]);
 

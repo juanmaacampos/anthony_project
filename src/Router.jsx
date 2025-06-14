@@ -6,6 +6,8 @@ import PaymentPending from './pages/PaymentPending.jsx';
 import PaymentFailure from './pages/PaymentFailure.jsx';
 import OrderStatus from './pages/OrderStatus.jsx';
 import WebhookHandler from './pages/WebhookHandler.jsx';
+import PaymentDebugInfo from './pages/PaymentDebugInfo.jsx';
+// import PaymentDebug from './pages/PaymentDebug.jsx';
 
 const Router = () => {
   return (
@@ -18,6 +20,8 @@ const Router = () => {
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/payment/pending" element={<PaymentPending />} />
         <Route path="/payment/failure" element={<PaymentFailure />} />
+        <Route path="/payment/debug" element={<PaymentDebugInfo />} />
+        {/* <Route path="/payment/debug" element={<PaymentDebug />} /> */}
         
         {/* Ruta para manejar webhooks de MercadoPago (opcional) */}
         <Route path="/webhook/mercadopago" element={<WebhookHandler />} />

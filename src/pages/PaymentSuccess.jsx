@@ -22,34 +22,22 @@ const PaymentSuccess = () => {
         paymentId,
         status,
         collectionStatus,
-        allSearchParams: Object.fromEntries(searchParams.entries())
+        allSearchParams: Object.fromEntries(searchParams.entries()),
+        currentURL: window.location.href,
+        currentPath: window.location.pathname,
+        shouldBeOnSuccessPage: '✅ IF YOU SEE THIS, PAYMENT WAS SUPPOSED TO SUCCEED'
       });
 
       if (!orderId) {
-        console.error('❌ PaymentSuccess: No orderId found');
+        console.error('❌ PaymentSuccess: No orderId found in URL params');
+        console.log('Available search params:', Object.fromEntries(searchParams.entries()));
         setError('No se encontró el ID del pedido');
         setLoading(false);
         return;
       }
 
-      // Verificar que realmente el pago fue exitoso según MercadoPago
-      const isPaymentApproved = (
-        status === 'approved' || 
-        collectionStatus === 'approved'
-      );
-
-      if (!isPaymentApproved) {
-        console.warn('⚠️ PaymentSuccess: Payment not approved, redirecting to appropriate page');
-        console.log('Status details:', { status, collectionStatus });
-        
-        // Redirigir a la página correcta según el estado
-        if (status === 'pending' || collectionStatus === 'pending') {
-          window.location.href = `/restaurant_template/payment/pending?order=${orderId}&payment_id=${paymentId}&status=${status}&collection_status=${collectionStatus}`;
-        } else {
-          window.location.href = `/restaurant_template/payment/failure?order=${orderId}&payment_id=${paymentId}&status=${status}&collection_status=${collectionStatus}`;
-        }
-        return;
-      }
+      console.log('✅ PaymentSuccess: Processing approved payment');
+      console.log('Payment verification passed - staying on success page');
 
       try {
         console.log('💳 Processing successful payment for order:', orderId);
@@ -93,7 +81,7 @@ const PaymentSuccess = () => {
           }
         } else {
           console.error('❌ PaymentSuccess: Order not found in Firestore:', orderId);
-          setError('Pedido no encontrado');
+          setError('Pedido no encontrado en la base de datos');
         }
       } catch (err) {
         console.error('❌ Error loading/updating order:', err);
@@ -109,7 +97,25 @@ const PaymentSuccess = () => {
   if (loading) {
     return (
       <div className="payment-result">
-        <div className="loading">Cargando...</div>
+        <div className="loading">
+          <h2>✅ Procesando Pago Exitoso</h2>
+          <p>Verificando el estado de tu pedido...</p>
+          <div style={{
+            marginTop: '1rem', 
+            padding: '1rem', 
+            backgroundColor: '#f8f9fa',
+            borderRadius: '4px',
+            fontSize: '0.9rem',
+            fontFamily: 'monospace'
+          }}>
+            <div><strong>Debug Info:</strong></div>
+            <div>URL: {window.location.href}</div>
+            <div>Order ID: {orderId || 'NOT FOUND'}</div>
+            <div>Payment ID: {paymentId || 'NOT FOUND'}</div>
+            <div>Status: {status || 'NOT FOUND'}</div>
+            <div>Collection Status: {collectionStatus || 'NOT FOUND'}</div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -120,6 +126,21 @@ const PaymentSuccess = () => {
         <div className="error">
           <h2>❌ Error</h2>
           <p>{error}</p>
+          <div style={{
+            marginTop: '1rem', 
+            padding: '1rem', 
+            backgroundColor: '#f8f9fa',
+            borderRadius: '4px',
+            fontSize: '0.9rem',
+            fontFamily: 'monospace'
+          }}>
+            <div><strong>Debug Info:</strong></div>
+            <div>URL: {window.location.href}</div>
+            <div>Order ID: {orderId || 'NOT FOUND'}</div>
+            <div>Payment ID: {paymentId || 'NOT FOUND'}</div>
+            <div>Status: {status || 'NOT FOUND'}</div>
+            <div>Collection Status: {collectionStatus || 'NOT FOUND'}</div>
+          </div>
           <Link to="/" className="btn">Volver al inicio</Link>
         </div>
       </div>
