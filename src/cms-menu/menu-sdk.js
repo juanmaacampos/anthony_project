@@ -4,15 +4,24 @@ import { globalFirebaseManager } from './firebase-manager.js';
 import { OrderService } from './order-service.js';
 
 export class MenuSDK {
-  constructor(firebaseConfig, restaurantId) {
+  constructor(firebaseConfig, businessIdOrRestaurantId) {
     this.firebaseConfig = firebaseConfig;
-    this.restaurantId = restaurantId;
+    // Soporte para ambos: businessId (nuevo) y restaurantId (compatibilidad)
+    this.businessId = businessIdOrRestaurantId;
+    this.restaurantId = businessIdOrRestaurantId; // Mantener para compatibilidad
     this.app = null;
     this.db = null;
     this.storage = null;
     this.initialized = false;
     this.orderService = null;
     this.firebaseManager = globalFirebaseManager;
+  }
+
+  /**
+   * Public method to ensure SDK is initialized
+   */
+  async initialize() {
+    return await this._ensureInitialized();
   }
 
   async _ensureInitialized() {
@@ -26,7 +35,7 @@ export class MenuSDK {
       this.initialized = true;
       
       // Initialize order service with firebaseManager
-      this.orderService = new OrderService(globalFirebaseManager, this.restaurantId);
+      this.orderService = new OrderService(globalFirebaseManager, this.businessId);
     } catch (error) {
       throw new Error(`Failed to initialize MenuSDK: ${error.message}`);
     }
@@ -81,34 +90,75 @@ export class MenuSDK {
     }
   }
 
+  /**
+   * Obtiene información básica del negocio (nuevo método unificado)
+   */
+  async getBusinessInfo() {
+    try {
+      await this._ensureInitialized();
+      
+      console.log('🔍 Fetching business info for:', this.businessId);
+      
+      // Intentar primero con la colección businesses
+      const businessRef = doc(this.db, 'businesses', this.businessId);
+      const businessDoc = await getDoc(businessRef);
+      
+      if (businessDoc.exists()) {
+        console.log('✅ Business info loaded from businesses collection');
+        return businessDoc.data();
+      }
+      
+      // Fallback: intentar con la colección restaurants (compatibilidad)
+      console.log('📍 Trying restaurants collection for compatibility...');
+      const restaurantRef = doc(this.db, 'restaurants', this.businessId);
+      const restaurantDoc = await getDoc(restaurantRef);
+      
+      if (restaurantDoc.exists()) {
+        console.log('✅ Business info loaded from restaurants collection (compatibility mode)');
+        const data = restaurantDoc.data();
+        // Agregar businessType por defecto si no existe
+        return {
+          ...data,
+          businessType: data.businessType || 'restaurant'
+        };
+      }
+      
+      throw new Error('Business not found in either businesses or restaurants collection');
+    } catch (error) {
+      console.error('❌ Error getting business info:', error);
+      throw error;
+    }
+  }
+
   async getRestaurantInfo() {
     try {
       await this._ensureInitialized();
       
       console.log('🔍 Fetching restaurant info for:', this.restaurantId);
       
-      const restaurantRef = doc(this.db, 'restaurants', this.restaurantId);
-      const restaurantDoc = await getDoc(restaurantRef);
-      
-      if (!restaurantDoc.exists()) {
-        console.error('❌ Restaurant document not found for ID:', this.restaurantId);
-        throw new Error(`Restaurant not found with ID: ${this.restaurantId}`);
+      // Intentar primero con businesses (nuevo sistema)
+      try {
+        return await this.getBusinessInfo();
+      } catch (businessError) {
+        // Fallback: usar colección restaurants original
+        const restaurantRef = doc(this.db, 'restaurants', this.restaurantId);
+        const restaurantDoc = await getDoc(restaurantRef);
+        
+        if (!restaurantDoc.exists()) {
+          throw new Error('Restaurant not found');
+        }
+        
+        console.log('✅ Restaurant info loaded successfully');
+        return restaurantDoc.data();
       }
-      
-      console.log('✅ Restaurant info loaded successfully');
-      return restaurantDoc.data();
     } catch (error) {
       console.error('❌ Error getting restaurant info:', error);
       
       // Provide better error context
       if (error.code === 'unavailable') {
-        throw new Error('Firebase service is temporarily unavailable. Please check your internet connection.');
+        throw new Error('Firebase service is temporarily unavailable. Please try again later.');
       } else if (error.code === 'permission-denied') {
-        throw new Error('Permission denied. Check your Firebase security rules.');
-      } else if (error.message.includes('offline')) {
-        throw new Error('Firebase is in offline mode. Check your internet connection.');
-      } else if (error.message.includes('INTERNAL ASSERTION FAILED')) {
-        throw new Error('Firebase internal error. This is usually temporary - please try again in a moment.');
+        throw new Error('Access denied. Please check your Firebase security rules.');
       }
       
       throw error;
@@ -119,11 +169,20 @@ export class MenuSDK {
     try {
       await this._ensureInitialized();
       
-      console.log('🍽️ Fetching full menu for restaurant:', this.restaurantId);
+      console.log('🍽️ Fetching full menu for business:', this.businessId);
       
-      const categoriesRef = collection(this.db, 'restaurants', this.restaurantId, 'menu');
-      const categoriesQuery = query(categoriesRef, orderBy('order', 'asc'));
-      const categoriesSnapshot = await getDocs(categoriesQuery);
+      // Intentar con la nueva estructura businesses
+      let categoriesRef = collection(this.db, 'businesses', this.businessId, 'menu');
+      let categoriesQuery = query(categoriesRef, orderBy('order', 'asc'));
+      let categoriesSnapshot = await getDocs(categoriesQuery);
+      
+      // Si no hay categorías en businesses, intentar con restaurants (compatibilidad)
+      if (categoriesSnapshot.empty) {
+        console.log('📍 Trying restaurants collection for menu...');
+        categoriesRef = collection(this.db, 'restaurants', this.businessId, 'menu');
+        categoriesQuery = query(categoriesRef, orderBy('order', 'asc'));
+        categoriesSnapshot = await getDocs(categoriesQuery);
+      }
       
       console.log('📂 Found', categoriesSnapshot.size, 'menu categories');
       
@@ -136,53 +195,46 @@ export class MenuSDK {
           items: []
         };
         
-        const itemsRef = collection(this.db, 'restaurants', this.restaurantId, 'menu', categoryDoc.id, 'items');
+        // Obtener items de esta categoría
+        const itemsRef = collection(categoryDoc.ref, 'items');
         const itemsQuery = query(itemsRef, orderBy('name', 'asc'));
         const itemsSnapshot = await getDocs(itemsQuery);
         
-        // Resolver URLs de imágenes para cada item
-        console.log(`🔄 Processing ${itemsSnapshot.docs.length} items for category "${categoryData.name}"`);
+        console.log(`📋 Category "${categoryData.name}": ${itemsSnapshot.size} items`);
         
-        const itemsWithImages = await Promise.all(
-          itemsSnapshot.docs.map(async (itemDoc) => {
-            const itemData = {
-              id: itemDoc.id,
-              ...itemDoc.data()
-            };
-            
-            console.log(`📄 Processing item "${itemData.name}":`, {
-              hasImage: !!itemData.image,
-              imagePath: itemData.image,
-              itemId: itemData.id
-            });
-            
-            // Resolver URL de imagen si existe
-            if (itemData.image) {
-              console.log(`🖼️ Resolving image for "${itemData.name}": ${itemData.image}`);
-              const resolvedImageUrl = await this._resolveImageUrl(itemData.image);
+        for (const itemDoc of itemsSnapshot.docs) {
+          const itemData = {
+            id: itemDoc.id,
+            ...itemDoc.data()
+          };
+          
+          // Resolver URL de imagen - priorizar imageUrl sobre image
+          let imageSource = itemData.imageUrl || itemData.image;
+          
+          if (imageSource) {
+            console.log(`🖼️ Found image for ${itemData.name}:`, imageSource);
+            try {
+              const resolvedUrl = await this._resolveImageUrl(imageSource);
+              console.log(`✅ Image resolved for ${itemData.name}:`, resolvedUrl);
               
-              if (resolvedImageUrl) {
-                itemData.image = resolvedImageUrl;
-                console.log(`✅ Image resolved for "${itemData.name}": ${resolvedImageUrl}`);
-              } else {
-                console.warn(`⚠️ Failed to resolve image for "${itemData.name}": ${itemData.image}`);
-                itemData.image = null; // Set to null if resolution fails
-              }
-            } else {
-              console.log(`ℹ️ No image for item "${itemData.name}"`);
+              // Establecer tanto image como imageUrl para compatibilidad
+              itemData.image = resolvedUrl;
+              itemData.imageUrl = resolvedUrl;
+            } catch (imageError) {
+              console.warn(`❌ Error resolving image for ${itemData.name}:`, imageError.message);
+              itemData.image = null;
+              itemData.imageUrl = null;
             }
-            
-            return itemData;
-          })
-        );
-        
-        categoryData.items = itemsWithImages;
-        
-        console.log(`📋 Category "${categoryData.name}":`, categoryData.items.length, 'items');
-        
-        if (categoryData.items.length > 0) {
-          menu.push(categoryData);
+          } else {
+            console.log(`❌ No image found for item: ${itemData.name}`);
+            itemData.image = null;
+            itemData.imageUrl = null;
+          }
+          
+          categoryData.items.push(itemData);
         }
+        
+        menu.push(categoryData);
       }
       
       console.log('✅ Full menu loaded successfully:', menu.length, 'categories');
@@ -192,35 +244,103 @@ export class MenuSDK {
       
       // Proporcionar más contexto sobre el error
       if (error.code === 'unavailable') {
-        throw new Error('Firebase service is temporarily unavailable. Please check your internet connection.');
+        throw new Error('Firebase service is temporarily unavailable. Please try again later.');
       } else if (error.code === 'permission-denied') {
-        throw new Error('Permission denied. Check your Firebase security rules.');
-      } else if (error.message.includes('offline')) {
-        throw new Error('Firebase is in offline mode. Check your internet connection.');
-      } else if (error.message.includes('INTERNAL ASSERTION FAILED')) {
-        throw new Error('Firebase internal error. This is usually temporary - please try again in a moment.');
+        throw new Error('Access denied. Please check your Firebase security rules.');
       }
       
       throw error;
     }
   }
 
-  async getFeaturedItems() {
+  /**
+   * Obtiene una categoría específica con sus items
+   */
+  async getCategory(categoryId) {
+    try {
+      await this._ensureInitialized();
+      
+      // Intentar con businesses primero
+      let categoryRef = doc(this.db, 'businesses', this.businessId, 'menu', categoryId);
+      let categoryDoc = await getDoc(categoryRef);
+      
+      // Fallback a restaurants si no existe en businesses
+      if (!categoryDoc.exists()) {
+        categoryRef = doc(this.db, 'restaurants', this.businessId, 'menu', categoryId);
+        categoryDoc = await getDoc(categoryRef);
+      }
+      
+      if (!categoryDoc.exists()) {
+        throw new Error('Category not found');
+      }
+      
+      const categoryData = {
+        id: categoryDoc.id,
+        ...categoryDoc.data(),
+        items: []
+      };
+      
+      // Obtener items de esta categoría
+      const itemsRef = collection(categoryDoc.ref, 'items');
+      const itemsQuery = query(itemsRef, orderBy('name', 'asc'));
+      const itemsSnapshot = await getDocs(itemsQuery);
+      
+      for (const itemDoc of itemsSnapshot.docs) {
+        const itemData = {
+          id: itemDoc.id,
+          ...itemDoc.data()
+        };
+        
+        // Resolver URL de imagen - priorizar imageUrl sobre image
+        let imageSource = itemData.imageUrl || itemData.image;
+        
+        if (imageSource) {
+          try {
+            const resolvedUrl = await this._resolveImageUrl(imageSource);
+            itemData.image = resolvedUrl;
+            itemData.imageUrl = resolvedUrl;
+          } catch (imageError) {
+            console.warn(`⚠️ Could not resolve image for item ${itemData.name}:`, imageError.message);
+            itemData.image = null;
+            itemData.imageUrl = null;
+          }
+        }
+        
+        categoryData.items.push(itemData);
+      }
+      
+      return categoryData;
+    } catch (error) {
+      console.error('Error getting category:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Busca items por nombre o descripción
+   */
+  async searchItems(searchTerm) {
     try {
       const menu = await this.getFullMenu();
-      const featuredItems = [];
+      const allItems = [];
       
       menu.forEach(category => {
-        const featured = category.items.filter(item => item.isFeatured && item.isAvailable);
-        featuredItems.push(...featured.map(item => ({
-          ...item,
-          categoryName: category.name
-        })));
+        category.items.forEach(item => {
+          allItems.push({
+            ...item,
+            categoryName: category.name,
+            categoryId: category.id
+          });
+        });
       });
       
-      return featuredItems;
+      const searchTermLower = searchTerm.toLowerCase();
+      return allItems.filter(item => 
+        item.name.toLowerCase().includes(searchTermLower) ||
+        (item.description && item.description.toLowerCase().includes(searchTermLower))
+      );
     } catch (error) {
-      console.error('Error getting featured items:', error);
+      console.error('Error searching items:', error);
       throw error;
     }
   }
@@ -247,6 +367,6 @@ export class MenuSDK {
   }
 }
 
-export function createMenuSDK(firebaseConfig, restaurantId) {
-  return new MenuSDK(firebaseConfig, restaurantId);
+export function createMenuSDK(firebaseConfig, businessId) {
+  return new MenuSDK(firebaseConfig, businessId);
 }

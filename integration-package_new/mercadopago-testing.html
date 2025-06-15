@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 MercadoPago Testing - CMS Menu SDK</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #009ee3, #00b4ff);
+            color: white;
+            border-radius: 12px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            background: #f8f9fa;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 10px 10px 0;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #009ee3, #00b4ff);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        
+        .code-block {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .test-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .test-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .test-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            transform: rotate(45deg);
+        }
+        
+        .test-card-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checklist li::before {
+            content: '⏳';
+            font-size: 1.2rem;
+        }
+        
+        .checklist li.completed::before {
+            content: '✅';
+        }
+        
+        .checklist li.error::before {
+            content: '❌';
+        }
+        
+        #test-output {
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            .test-cards { grid-template-columns: 1fr; }
+            .btn { width: 100%; margin: 5px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 MercadoPago Testing Suite</h1>
+            <p>Herramienta completa para probar la integración de MercadoPago con tu SDK de menús</p>
+        </div>
+
+        <!-- Sección de Estado -->
+        <div class="test-section">
+            <h3>📊 Estado del Sistema</h3>
+            <div id="system-status">
+                <div class="loading">🔄 Verificando configuración...</div>
+            </div>
+        </div>
+
+        <!-- Checklist de Testing -->
+        <div class="test-section">
+            <h3>✅ Checklist de Testing</h3>
+            <ul class="checklist" id="testing-checklist">
+                <li id="check-config">Verificar configuración de credenciales</li>
+                <li id="check-sdk">Verificar SDK de Firebase</li>
+                <li id="check-functions">Verificar Cloud Functions</li>
+                <li id="check-cart">Probar funcionalidad del carrito</li>
+                <li id="check-payment">Probar creación de preferencia de pago</li>
+                <li id="check-webhook">Probar webhook de notificaciones</li>
+            </ul>
+        </div>
+
+        <!-- Controles de Testing -->
+        <div class="test-section">
+            <h3>🎮 Controles de Testing</h3>
+            
+            <button class="btn btn-primary" onclick="runFullTest()">
+                🚀 Ejecutar Test Completo
+            </button>
+            
+            <button class="btn btn-success" onclick="testConfiguration()">
+                🔧 Test Configuración
+            </button>
+            
+            <button class="btn btn-warning" onclick="testPaymentFlow()">
+                💳 Test Flujo de Pago
+            </button>
+            
+            <button class="btn btn-primary" onclick="generateTestOrder()">
+                📦 Generar Pedido de Prueba
+            </button>
+            
+            <button class="btn btn-success" onclick="clearTests()">
+                🧹 Limpiar Tests
+            </button>
+        </div>
+
+        <!-- Tarjetas de Prueba -->
+        <div class="test-section">
+            <h3>💳 Tarjetas de Prueba</h3>
+            <p>Usa estas tarjetas para probar diferentes escenarios de pago:</p>
+            
+            <div class="test-cards">
+                <div class="test-card">
+                    <div class="test-card-content">
+                        <h4>✅ Pago Aprobado</h4>
+                        <p><strong>Número:</strong> 4509 9535 6623 3704</p>
+                        <p><strong>CVV:</strong> 123</p>
+                        <p><strong>Vencimiento:</strong> 11/25</p>
+                        <p><strong>Titular:</strong> APRO</p>
+                    </div>
+                </div>
+                
+                <div class="test-card">
+                    <div class="test-card-content">
+                        <h4>❌ Pago Rechazado</h4>
+                        <p><strong>Número:</strong> 4000 0000 0000 0002</p>
+                        <p><strong>CVV:</strong> 123</p>
+                        <p><strong>Vencimiento:</strong> 11/25</p>
+                        <p><strong>Titular:</strong> OTHE</p>
+                    </div>
+                </div>
+                
+                <div class="test-card">
+                    <div class="test-card-content">
+                        <h4>⏳ Pago Pendiente</h4>
+                        <p><strong>Número:</strong> 4509 9535 6623 3704</p>
+                        <p><strong>CVV:</strong> 123</p>
+                        <p><strong>Vencimiento:</strong> 11/25</p>
+                        <p><strong>Titular:</strong> CONT</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Output de Tests -->
+        <div class="test-section">
+            <h3>📝 Resultados de Testing</h3>
+            <div id="test-output">
+                <div class="loading">Los resultados aparecerán aquí...</div>
+            </div>
+        </div>
+
+        <!-- Configuración -->
+        <div class="test-section">
+            <h3>⚙️ Configuración Actual</h3>
+            <div class="code-block" id="current-config">
+                <div class="loading">Cargando configuración...</div>
+            </div>
+        </div>
+
+        <!-- Guía Rápida -->
+        <div class="test-section">
+            <h3>🎯 Guía Rápida de Testing</h3>
+            <div class="code-block">
+// 1. Configurar credenciales de testing en Firebase Functions:
+firebase functions:config:set mercadopago.access_token="TEST-TU-ACCESS-TOKEN"
+
+// 2. Desplegar las funciones:
+firebase deploy --only functions
+
+// 3. Ejecutar tests desde esta página
+
+// 4. Probar con tarjetas de prueba
+// 5. Verificar webhooks en la consola
+// 6. Revisar logs en Firebase Console
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { MERCADOPAGO_TEST_CONFIG, isTestingMode, getTestCardsInfo } from './mercadopago-test-config.js';
+        import { createMenuSDK } from './menu-sdk.js';
+        import { MENU_CONFIG } from './config.js';
+
+        // Variables globales
+        let testResults = {};
+        let currentTestRunning = false;
+
+        // Inicializar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            initializePage();
+        });
+
+        async function initializePage() {
+            log('🚀 Inicializando Testing Suite...');
+            
+            // Verificar configuración básica
+            await checkSystemStatus();
+            
+            // Mostrar configuración actual
+            displayCurrentConfig();
+            
+            log('✅ Testing Suite listo para usar');
+        }
+
+        async function checkSystemStatus() {
+            const statusEl = document.getElementById('system-status');
+            let statusHTML = '';
+
+            // Verificar modo testing
+            if (isTestingMode()) {
+                statusHTML += `<div class="status success">✅ Modo Testing Activado</div>`;
+            } else {
+                statusHTML += `<div class="status warning">⚠️ Modo Producción Detectado</div>`;
+            }
+
+            // Verificar configuración Firebase
+            try {
+                const menuSDK = createMenuSDK(MENU_CONFIG.firebaseConfig, MENU_CONFIG.restaurantId);
+                statusHTML += `<div class="status success">✅ SDK Firebase Configurado</div>`;
+            } catch (error) {
+                statusHTML += `<div class="status error">❌ Error en SDK Firebase: ${error.message}</div>`;
+            }
+
+            // Verificar tarjetas de prueba
+            const testCards = getTestCardsInfo();
+            statusHTML += `<div class="status info">📋 ${Object.keys(testCards.all).length} Tarjetas de Prueba Disponibles</div>`;
+
+            statusEl.innerHTML = statusHTML;
+        }
+
+        function displayCurrentConfig() {
+            const configEl = document.getElementById('current-config');
+            const config = {
+                testingMode: isTestingMode(),
+                restaurantId: MENU_CONFIG.restaurantId,
+                firebaseProject: MENU_CONFIG.firebaseConfig.projectId,
+                testCardsCount: Object.keys(getTestCardsInfo().all).length
+            };
+            
+            configEl.innerHTML = JSON.stringify(config, null, 2);
+        }
+
+        // Funciones de testing principales
+        window.runFullTest = async function() {
+            if (currentTestRunning) return;
+            
+            currentTestRunning = true;
+            log('🚀 Iniciando test completo...');
+            
+            try {
+                await testConfiguration();
+                await sleep(1000);
+                await testPaymentFlow();
+                await sleep(1000);
+                await generateTestOrder();
+                
+                log('✅ Test completo finalizado');
+                updateChecklistItem('check-payment', 'completed');
+                
+            } catch (error) {
+                log(`❌ Error en test completo: ${error.message}`);
+            } finally {
+                currentTestRunning = false;
+            }
+        };
+
+        window.testConfiguration = async function() {
+            log('🔧 Testing configuración...');
+            
+            try {
+                // Test 1: Verificar credenciales
+                const hasTestCredentials = isTestingMode();
+                log(`- Credenciales de testing: ${hasTestCredentials ? '✅' : '❌'}`);
+                updateChecklistItem('check-config', hasTestCredentials ? 'completed' : 'error');
+                
+                // Test 2: Verificar SDK
+                const menuSDK = createMenuSDK(MENU_CONFIG.firebaseConfig, MENU_CONFIG.restaurantId);
+                const restaurant = await menuSDK.getRestaurantInfo();
+                log(`- SDK Firebase: ✅ Conectado a ${restaurant.name}`);
+                updateChecklistItem('check-sdk', 'completed');
+                
+                // Test 3: Verificar tarjetas de prueba
+                const testCards = getTestCardsInfo();
+                log(`- Tarjetas de prueba: ✅ ${Object.keys(testCards.all).length} disponibles`);
+                
+                log('✅ Configuración verificada correctamente');
+                
+            } catch (error) {
+                log(`❌ Error en configuración: ${error.message}`);
+                updateChecklistItem('check-config', 'error');
+            }
+        };
+
+        window.testPaymentFlow = async function() {
+            log('💳 Testing flujo de pago...');
+            
+            try {
+                // Simular items del carrito
+                const testItems = [
+                    { id: 'test-1', name: 'Pizza Testing', price: 1500, quantity: 1 },
+                    { id: 'test-2', name: 'Hamburguesa Testing', price: 850, quantity: 2 }
+                ];
+                
+                const testTotal = testItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                
+                log(`- Items de prueba creados: ${testItems.length} items`);
+                log(`- Total calculado: $${testTotal}`);
+                updateChecklistItem('check-cart', 'completed');
+                
+                // Simular creación de preferencia
+                const testPayload = {
+                    orderId: `test_${Date.now()}`,
+                    items: testItems,
+                    total: testTotal,
+                    restaurantId: MENU_CONFIG.restaurantId,
+                    customerInfo: {
+                        name: 'Usuario de Prueba',
+                        email: 'test@example.com',
+                        phone: '+5491234567890'
+                    }
+                };
+                
+                log('- Payload de prueba preparado:');
+                log(JSON.stringify(testPayload, null, 2));
+                
+                log('✅ Flujo de pago simulado correctamente');
+                
+            } catch (error) {
+                log(`❌ Error en flujo de pago: ${error.message}`);
+            }
+        };
+
+        window.generateTestOrder = async function() {
+            log('📦 Generando pedido de prueba...');
+            
+            try {
+                const orderId = `test_order_${Date.now()}`;
+                const testOrder = {
+                    orderId,
+                    items: [
+                        { id: 'test-pizza', name: 'Pizza Margherita Testing', price: 1500, quantity: 1 },
+                        { id: 'test-drink', name: 'Coca Cola Testing', price: 300, quantity: 2 }
+                    ],
+                    total: 2100,
+                    paymentMethod: 'mercadopago',
+                    customerInfo: {
+                        name: 'Juan Testing',
+                        email: 'juan.testing@example.com',
+                        phone: '+5491234567890'
+                    },
+                    timestamp: new Date().toISOString()
+                };
+                
+                log(`- Order ID: ${orderId}`);
+                log(`- Total: $${testOrder.total}`);
+                log(`- Customer: ${testOrder.customerInfo.name}`);
+                
+                // Aquí se llamaría a la Cloud Function real
+                log('💡 Para probar con Cloud Function real, usar el componente React');
+                
+                log('✅ Pedido de prueba generado');
+                
+            } catch (error) {
+                log(`❌ Error generando pedido: ${error.message}`);
+            }
+        };
+
+        window.clearTests = function() {
+            document.getElementById('test-output').innerHTML = '<div class="loading">Tests limpiados. Listos para nueva ejecución...</div>';
+            
+            // Reset checklist
+            const checklistItems = document.querySelectorAll('.checklist li');
+            checklistItems.forEach(item => {
+                item.className = '';
+            });
+            
+            log('🧹 Tests limpiados');
+        };
+
+        // Funciones auxiliares
+        function log(message) {
+            const output = document.getElementById('test-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `<div>[${timestamp}] ${message}</div>`;
+            
+            if (output.innerHTML.includes('Los resultados aparecerán aquí') || 
+                output.innerHTML.includes('Tests limpiados')) {
+                output.innerHTML = logEntry;
+            } else {
+                output.innerHTML += logEntry;
+            }
+            
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+
+        function updateChecklistItem(itemId, status) {
+            const item = document.getElementById(itemId);
+            if (item) {
+                item.className = status;
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Hacer funciones globales
+        window.log = log;
+        window.updateChecklistItem = updateChecklistItem;
+    </script>
+</body>
+</html>

@@ -52,9 +52,41 @@ class GlobalFirebaseManager {
     }
   }
 
+  /**
+   * Método de inicialización simple para páginas de pago
+   * Usa la configuración por defecto del config.js
+   */
+  async initializeForPayment() {
+    try {
+      const { MENU_CONFIG } = await import('./config.js');
+      return await this.initialize(MENU_CONFIG.firebaseConfig);
+    } catch (error) {
+      console.error('❌ Failed to initialize Firebase for payment page:', error);
+      throw error;
+    }
+  }
+
   async _doInitialize(firebaseConfig) {
     try {
       console.log('🚀 Global Firebase Manager: Initializing...');
+
+      // Verificar que tenemos la configuración de Firebase
+      if (!firebaseConfig || !firebaseConfig.apiKey) {
+        console.error('❌ No Firebase configuration provided, using default config');
+        // Usar la configuración por defecto del config.js
+        const { MENU_CONFIG } = await import('./config.js');
+        firebaseConfig = MENU_CONFIG.firebaseConfig;
+        
+        if (!firebaseConfig || !firebaseConfig.apiKey) {
+          throw new Error('Firebase configuration is missing. Please check config.js');
+        }
+      }
+
+      console.log('✅ Firebase config verified:', {
+        apiKey: firebaseConfig.apiKey ? '***configured***' : 'missing',
+        authDomain: firebaseConfig.authDomain,
+        projectId: firebaseConfig.projectId
+      });
 
       // Clean up any existing apps to avoid conflicts
       await this._cleanupExistingApps();

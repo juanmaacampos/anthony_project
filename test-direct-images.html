@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Image URLs</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-image { 
+            max-width: 300px; 
+            height: 200px; 
+            object-fit: cover; 
+            border: 2px solid #ddd; 
+            margin: 10px; 
+            display: block;
+        }
+        .success { border-color: green; }
+        .error { border-color: red; }
+        .result { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+        }
+        .success-result { background: #e8f5e8; color: #2e7d32; }
+        .error-result { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Image URLs Directly</h1>
+    
+    <div id="results"></div>
+
+    <script>
+        const imageUrls = [
+            'https://firebasestorage.googleapis.com/v0/b/cms-menu-7b4a4.firebasestorage.app/o/businesses%2FHsuTZWhRVkT88a0WOztELGzJUhl1%2Fitems%2FaSeeWR7dDabQW03UBpYS%2Fimage.jpg?alt=media&token=65661dc3-5114-4f07-a09e-c232fd52efb9',
+            'https://firebasestorage.googleapis.com/v0/b/cms-menu-7b4a4.firebasestorage.app/o/businesses%2FHsuTZWhRVkT88a0WOztELGzJUhl1%2Fitems%2FdzBvL6BAbHaHtalYwT9H%2Fimage.jpg?alt=media&token=794e2b22-4c29-41dc-b453-b7297b012986'
+        ];
+
+        const itemNames = ['Hamburguesa triple', 'hamburguesa dobe'];
+        const resultsEl = document.getElementById('results');
+
+        imageUrls.forEach((url, index) => {
+            const itemName = itemNames[index];
+            
+            // Create result container
+            const container = document.createElement('div');
+            container.innerHTML = `<h3>🍔 ${itemName}</h3><p><strong>URL:</strong> ${url}</p>`;
+            
+            // Create image element
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = itemName;
+            img.className = 'test-image';
+            
+            // Create result div
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Loading...';
+            
+            img.onload = function() {
+                console.log(`✅ Image loaded successfully: ${itemName}`, url);
+                img.className += ' success';
+                resultDiv.className += ' success-result';
+                resultDiv.textContent = `✅ Image loaded successfully! Size: ${img.naturalWidth}x${img.naturalHeight}`;
+            };
+            
+            img.onerror = function(error) {
+                console.error(`❌ Image failed to load: ${itemName}`, { url, error });
+                img.className += ' error';
+                resultDiv.className += ' error-result';
+                resultDiv.textContent = `❌ Image failed to load. Error: ${error.type || 'Unknown'}`;
+            };
+            
+            container.appendChild(img);
+            container.appendChild(resultDiv);
+            resultsEl.appendChild(container);
+        });
+    </script>
+</body>
+</html>

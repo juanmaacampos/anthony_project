@@ -43,7 +43,7 @@ const PaymentSuccess = () => {
         console.log('💳 Processing successful payment for order:', orderId);
         console.log('📄 Payment details:', { paymentId, status, collectionStatus });
 
-        await globalFirebaseManager.initialize();
+        await globalFirebaseManager.initializeForPayment();
         const db = globalFirebaseManager.getDatabase();
         const orderRef = doc(db, 'orders', orderId);
         const orderDoc = await getDoc(orderRef);

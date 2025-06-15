@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CustomerForm from './CustomerForm';
 import PaymentSelection from './PaymentSelection';
 import { OrderService } from '../../cms-menu/order-service';
@@ -6,11 +6,48 @@ import { paymentService } from '../../cms-menu/payment-service';
 import { MENU_CONFIG } from '../../cms-menu/config';
 import './Cart.css';
 
-const Cart = ({ cart, updateQuantity, removeFromCart, clearCart, total, onClose, firebaseManager }) => {
+const Cart = ({ cart = [], updateQuantity, removeFromCart, clearCart, total = 0, onClose, firebaseManager }) => {
   const [currentStep, setCurrentStep] = useState('cart'); // 'cart', 'payment', 'customer'
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [loading, setLoading] = useState(false);
-  const [orderService] = useState(() => new OrderService(firebaseManager, MENU_CONFIG.restaurantId));
+  const [orderService, setOrderService] = useState(null);
+
+  // Ensure total is always a number
+  const safeTotal = typeof total === 'number' ? total : 0;
+  const cartCount = Array.isArray(cart) ? cart.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0;
+
+  // Debug: Log props to verify what we're receiving
+  useEffect(() => {
+    console.log('🛒 Cart component props:', {
+      cart: cart.length,
+      total,
+      firebaseManager: !!firebaseManager,
+      orderService: !!orderService
+    });
+  }, [cart, total, firebaseManager, orderService]);
+
+  // Initialize OrderService when firebaseManager is available
+  useEffect(() => {
+    const initializeOrderService = async () => {
+      if (firebaseManager) {
+        console.log('✅ Initializing OrderService with Firebase manager');
+        setOrderService(new OrderService(firebaseManager, MENU_CONFIG.businessId || MENU_CONFIG.restaurantId));
+      } else {
+        // Try to get firebaseManager from global Firebase manager if available
+        try {
+          const { globalFirebaseManager } = await import('../../cms-menu/firebase-manager.js');
+          if (globalFirebaseManager) {
+            console.log('✅ Initializing OrderService with global Firebase manager');
+            setOrderService(new OrderService(globalFirebaseManager, MENU_CONFIG.businessId || MENU_CONFIG.restaurantId));
+          }
+        } catch (error) {
+          console.warn('⚠️ Could not initialize OrderService:', error.message);
+        }
+      }
+    };
+
+    initializeOrderService();
+  }, [firebaseManager]);
 
   const handlePaymentMethodSelect = (method) => {
     setSelectedPaymentMethod(method);
@@ -18,6 +55,22 @@ const Cart = ({ cart, updateQuantity, removeFromCart, clearCart, total, onClose,
   };
 
   const handleCustomerSubmit = async (customerData) => {
+    if (!orderService) {
+      // Try to initialize OrderService one more time
+      try {
+        const { globalFirebaseManager } = await import('../../cms-menu/firebase-manager.js');
+        const tempOrderService = new OrderService(globalFirebaseManager, MENU_CONFIG.businessId || MENU_CONFIG.restaurantId);
+        setOrderService(tempOrderService);
+        
+        // Continue with the original order service
+        return handleCustomerSubmit(customerData);
+      } catch (error) {
+        console.error('❌ Failed to initialize OrderService:', error);
+        alert('Error: Servicio de pedidos no disponible. Por favor recarga la página e intenta nuevamente.');
+        return;
+      }
+    }
+
     setLoading(true);
     
     try {
@@ -45,7 +98,7 @@ const Cart = ({ cart, updateQuantity, removeFromCart, clearCart, total, onClose,
     const orderData = {
       items: cart,
       customer: customerData,
-      total: total,
+      total: safeTotal,
       notes: customerData.notes,
       paymentMethod: 'cash'
     };
@@ -54,7 +107,7 @@ const Cart = ({ cart, updateQuantity, removeFromCart, clearCart, total, onClose,
     console.log('✅ Cash order created:', order);
     
     // Show success message for cash payment
-    alert(`¡Pedido confirmado! 🎉\n\nID: ${order.orderId}\n\nTe contactaremos por WhatsApp para coordinar el retiro.\n\nTotal a pagar: $${total.toFixed(2)} ARS`);
+    alert(`¡Pedido confirmado! 🎉\n\nID: ${order.orderId}\n\nTe contactaremos por WhatsApp para coordinar el retiro.\n\nTotal a pagar: $${safeTotal.toFixed(2)} ARS`);
     
     clearCart();
     onClose();
@@ -69,7 +122,7 @@ const Cart = ({ cart, updateQuantity, removeFromCart, clearCart, total, onClose,
 
     // Prepare order data for MercadoPago
     const orderData = {
-      restaurantId: MENU_CONFIG.restaurantId,
+      restaurantId: MENU_CONFIG.businessId || MENU_CONFIG.restaurantId,
       items: cart.map(item => ({
         name: item.name,
         unit_price: item.price,
@@ -81,7 +134,7 @@ const Cart = ({ cart, updateQuantity, removeFromCart, clearCart, total, onClose,
         email: customerData.email || '',
         address: customerData.address || ''
       },
-      totalAmount: total,
+      totalAmount: total || 0,
       orderId: orderId,
       backUrls: backUrls,
       notes: customerData.notes || ''
@@ -150,7 +203,7 @@ const Cart = ({ cart, updateQuantity, removeFromCart, clearCart, total, onClose,
           </div>
 
           <div className="cart-total">
-            <h3>Total: ${total.toFixed(2)} ARS</h3>
+            <h3>Total: ${safeTotal.toFixed(2)} ARS</h3>
           </div>
 
           <div className="cart-actions">

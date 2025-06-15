@@ -47,7 +47,7 @@ const PaymentFailure = () => {
       // VERIFICACIÓN ADICIONAL: Buscar en Firebase si el pago realmente fue exitoso
       // Esto maneja casos donde MercadoPago no envía los parámetros correctos
       try {
-        await globalFirebaseManager.initialize();
+        await globalFirebaseManager.initializeForPayment();
         const db = globalFirebaseManager.getDatabase();
         const orderRef = doc(db, 'orders', orderId);
         const orderDoc = await getDoc(orderRef);
@@ -81,7 +81,7 @@ const PaymentFailure = () => {
         console.log('❌ Processing failed payment for order:', orderId);
         console.log('📄 Payment details:', { paymentId, status, collectionStatus });
 
-        await globalFirebaseManager.initialize();
+        await globalFirebaseManager.initializeForPayment();
         const db = globalFirebaseManager.getDatabase();
         const orderRef = doc(db, 'orders', orderId);
         const orderDoc = await getDoc(orderRef);

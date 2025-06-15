@@ -48,7 +48,7 @@ const PaymentPending = () => {
 
       // VERIFICACIÓN ADICIONAL: Buscar en Firebase el estado real del pago
       try {
-        await globalFirebaseManager.initialize();
+        await globalFirebaseManager.initializeForPayment();
         const db = globalFirebaseManager.getDatabase();
         const orderRef = doc(db, 'orders', orderId);
         const orderDoc = await getDoc(orderRef);
@@ -77,7 +77,7 @@ const PaymentPending = () => {
         console.log('⏳ Processing pending payment for order:', orderId);
         console.log('📄 Payment details:', { paymentId, status, collectionStatus });
 
-        await globalFirebaseManager.initialize();
+        await globalFirebaseManager.initializeForPayment();
         const db = globalFirebaseManager.getDatabase();
         const orderRef = doc(db, 'orders', orderId);
         const orderDoc = await getDoc(orderRef);

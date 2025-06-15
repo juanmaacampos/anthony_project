@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MenuDisplay } from '../../cms-menu/MenuComponents.jsx';
-import { useMenu } from '../../cms-menu/useMenu.js';
+import { useMenuWithTerminology } from '../../cms-menu/useMenu.js';
 import { MENU_CONFIG } from '../../cms-menu/config.js';
 import { menuSDKManager } from '../../cms-menu/menu-sdk-singleton.js';
 import Cart from '../checkout/Cart';
@@ -15,14 +15,14 @@ const Menu = ({ cart, addToCart, updateQuantity, removeFromCart, clearCart, tota
   const titleRef = useRef(null);
   const [showCart, setShowCart] = useState(false);
 
-  // Use the same SDK instance as App.jsx
-  const menuSDK = menuSDKManager.getInstance(MENU_CONFIG.firebaseConfig, MENU_CONFIG.restaurantId);
-  const { menu, loading, error } = useMenu(menuSDK, { enabled: true });
+  // Use the same SDK instance as App.jsx with terminology support
+  const menuSDK = menuSDKManager.getInstance(MENU_CONFIG.firebaseConfig, MENU_CONFIG.businessId || MENU_CONFIG.restaurantId);
+  const { business, restaurant, menu, loading, error, terminology } = useMenuWithTerminology(menuSDK);
 
   // Debug cart changes
   useEffect(() => {
-    console.log('🛒 Menu - Cart updated:', cart, 'Total items:', itemCount);
-  }, [cart, itemCount]);
+    console.log('🛒 Menu - Cart updated:', cart, 'Total items:', itemCount || 0, 'Total:', total || 0);
+  }, [cart, itemCount, total]);
 
   useEffect(() => {
     gsap.fromTo(titleRef.current,
@@ -46,7 +46,7 @@ const Menu = ({ cart, addToCart, updateQuantity, removeFromCart, clearCart, tota
       <div className="container">
         <div className="menu-header">
           <h2 className="section-title" ref={titleRef}>
-            Nuestro Menú
+            {terminology?.menuNameCapitalized || 'Nuestro Menú'}
           </h2>
           {itemCount > 0 && (
             <button 
@@ -66,6 +66,7 @@ const Menu = ({ cart, addToCart, updateQuantity, removeFromCart, clearCart, tota
           showImages={true}
           showPrices={true}
           showDescription={true}
+          terminology={terminology}
         />
       </div>
 

@@ -83,16 +83,8 @@ export function useCart() {
     setCart([]);
   };
 
-  const cartTotal = cart.reduce((total, item) => {
-    const price = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
-    const quantity = typeof item.quantity === 'number' ? item.quantity : parseInt(item.quantity) || 0;
-    return total + (price * quantity);
-  }, 0);
-  
-  const cartCount = cart.reduce((total, item) => {
-    const quantity = typeof item.quantity === 'number' ? item.quantity : parseInt(item.quantity) || 0;
-    return total + quantity;
-  }, 0);
+  const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   return {
     cart,
@@ -101,9 +93,7 @@ export function useCart() {
     updateQuantity,
     clearCart,
     cartTotal,
-    cartCount,
-    total: cartTotal, // Alias for compatibility
-    itemCount: cartCount // Alias for compatibility
+    cartCount
   };
 }
 
@@ -215,45 +205,5 @@ export function useMenuWithTerminology(menuSDK) {
   return {
     ...menuData,
     terminology
-  };
-}
-
-// Hook para integración completa de menú
-export function useMenuIntegration(config, options = { enabled: true }) {
-  const [menuSDK, setMenuSDK] = useState(null);
-  const [firebaseManager, setFirebaseManager] = useState(null);
-  
-  useEffect(() => {
-    if (config && options.enabled) {
-      import('./menu-sdk.js').then(({ createMenuSDK }) => {
-        const sdk = createMenuSDK(config.firebaseConfig, config.businessId || config.restaurantId);
-        setMenuSDK(sdk);
-        
-        // Wait for SDK initialization to get firebaseManager
-        sdk.initialize().then(() => {
-          setFirebaseManager(sdk.firebaseManager);
-        }).catch(error => {
-          console.warn('⚠️ Failed to initialize SDK for firebaseManager:', error);
-        });
-      });
-    }
-  }, [config, options.enabled]);
-
-  const menuData = useMenuWithTerminology(menuSDK);
-  const cartData = useCart();
-  
-  // Ensure we always have valid numbers for cart calculations
-  const safeCartTotal = typeof cartData.cartTotal === 'number' ? cartData.cartTotal : 0;
-  const safeCartCount = typeof cartData.cartCount === 'number' ? cartData.cartCount : 0;
-  
-  return {
-    ...menuData,
-    ...cartData,
-    menuSDK,
-    firebaseManager, // Return the properly initialized firebaseManager
-    total: safeCartTotal, // Ensure total is always a number
-    itemCount: safeCartCount, // Ensure itemCount is always a number
-    cartTotal: safeCartTotal, // Alias for compatibility
-    cartCount: safeCartCount // Alias for compatibility
   };
 }

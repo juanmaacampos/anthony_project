@@ -9,32 +9,14 @@ export const MENU_CONFIG = {
     projectId: "cms-menu-7b4a4",
     storageBucket: "cms-menu-7b4a4.firebasestorage.app",
     messagingSenderId: "509736809578",
-    appId: "1:509736809578:web:15471af092f3b46392c613",
-    measurementId: "G-X4F9XDEL13"
+    appId: "1:509736809578:web:15471af092f3b46392c613"
   },
   
-  // ✅ Business ID (recomendado - sistema unificado)
+  // ✅ Business ID (recomendado)
   businessId: "HsuTZWhRVkT88a0WOztELGzJUhl1",
   
   // 🔄 Restaurant ID (para compatibilidad - mismo valor que businessId)
-  restaurantId: "HsuTZWhRVkT88a0WOztELGzJUhl1",
-  
-  // MercadoPago configuration - PRODUCCIÓN
-  mercadoPago: {
-    publicKey: "APP_USR-6359a306-23ca-4d23-924e-b72a3fd1816f", // Tu public key de producción
-    currency: "ARS",
-    enabled: true // Habilitado para producción
-  },
-  
-  // URLs de tu aplicación - PRODUCCIÓN
-  baseUrl: "https://juanmaacampos.github.io/restaurant_template", // URL de producción GitHub Pages
-  backendUrl: "https://us-central1-cms-menu-7b4a4.cloudfunctions.net", // Cloud Functions URL
-  
-  // 🧪 Testing configuration
-  testing: {
-    enabled: false, // Cambiar a true para habilitar modo testing
-    showTestingPanel: false
-  }
+  restaurantId: "HsuTZWhRVkT88a0WOztELGzJUhl1"
 };
 
 // Función para obtener el UID del business
@@ -42,7 +24,7 @@ export const MENU_CONFIG = {
 // 1. Ve a tu CMS panel y haz login con la cuenta del business
 // 2. Abre las herramientas de desarrollador (F12)
 // 3. En la consola ejecuta: firebase.auth().currentUser.uid
-// 4. Copia ese UID y reemplaza el businessId arriba
+// 4. Copia ese UID y reemplaza "YOUR_BUSINESS_UID_HERE" arriba
 
 export function validateConfig() {
   if (MENU_CONFIG.businessId === "YOUR_BUSINESS_UID_HERE" || 
@@ -58,5 +40,3 @@ export function validateConfig() {
   }
   return true;
 }
-
-//note

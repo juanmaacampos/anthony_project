@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug React Image Loading</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { 
+            display: flex; 
+            gap: 20px; 
+            flex-wrap: wrap; 
+        }
+        .test-item {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            width: 300px;
+        }
+        .item-image {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+            background: #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .item-placeholder {
+            width: 100%;
+            height: 200px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #6c757d;
+        }
+        .logs {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug React Image Loading</h1>
+    <div id="root"></div>
+    <div class="logs">
+        <h3>Logs:</h3>
+        <div id="logs"></div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function addLog(message, type = 'info') {
+            console.log(message);
+            const logsEl = document.getElementById('logs');
+            const logEl = document.createElement('div');
+            logEl.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
+            logEl.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logsEl.appendChild(logEl);
+            logsEl.scrollTop = logsEl.scrollHeight;
+        }
+
+        function ImageWithFallback({ src, alt, className, placeholder = "🍽️" }) {
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(false);
+
+            addLog(`🖼️ ImageWithFallback - Attempting to load: ${alt}`, 'info');
+            addLog(`URL: ${src}`, 'info');
+
+            useEffect(() => {
+                const timeout = setTimeout(() => {
+                    if (loading) {
+                        addLog(`⏰ Image loading timeout for: ${alt}`, 'error');
+                        setLoading(false);
+                        setError(true);
+                    }
+                }, 15000);
+
+                return () => clearTimeout(timeout);
+            }, [loading, src]);
+
+            const handleLoad = () => {
+                setLoading(false);
+                setError(false);
+                addLog(`✅ Image loaded successfully: ${alt}`, 'success');
+            };
+
+            const handleError = (errorEvent) => {
+                setLoading(false);
+                setError(true);
+                addLog(`❌ Error loading image: ${alt} - ${errorEvent.type}`, 'error');
+            };
+
+            if (!src || src.length === 0) {
+                addLog(`❌ No valid src provided for ${alt}, showing placeholder`, 'error');
+                return <div className={`${className} item-placeholder`}>{placeholder}</div>;
+            }
+
+            if (error) {
+                addLog(`❌ Image error occurred for ${alt}, showing placeholder`, 'error');
+                return <div className={`${className} item-placeholder`}>{placeholder}</div>;
+            }
+
+            return (
+                <div className={className} style={{ position: 'relative' }}>
+                    {loading && <div className="item-placeholder">🔄</div>}
+                    <img 
+                        src={src} 
+                        alt={alt}
+                        onLoad={handleLoad}
+                        onError={handleError}
+                        loading="lazy"
+                        style={{ 
+                            display: loading ? 'none' : 'block',
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            position: loading ? 'absolute' : 'static',
+                            top: 0,
+                            left: 0
+                        }}
+                    />
+                </div>
+            );
+        }
+
+        function MenuItem({ item }) {
+            const imageSource = item.imageUrl || item.image;
+            
+            return (
+                <div className="test-item">
+                    <ImageWithFallback 
+                        src={imageSource} 
+                        alt={item.name} 
+                        className="item-image"
+                    />
+                    <h3>{item.name}</h3>
+                    <p>${item.price}</p>
+                    <p>{item.description}</p>
+                </div>
+            );
+        }
+
+        function App() {
+            const menuItems = [
+                {
+                    id: 'aSeeWR7dDabQW03UBpYS',
+                    name: 'Hamburguesa triple',
+                    price: 1,
+                    description: 'Hamburguesa nashe',
+                    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/cms-menu-7b4a4.firebasestorage.app/o/businesses%2FHsuTZWhRVkT88a0WOztELGzJUhl1%2Fitems%2FaSeeWR7dDabQW03UBpYS%2Fimage.jpg?alt=media&token=65661dc3-5114-4f07-a09e-c232fd52efb9'
+                },
+                {
+                    id: 'dzBvL6BAbHaHtalYwT9H',
+                    name: 'hamburguesa dobe',
+                    price: 1,
+                    description: 'platito chill doble',
+                    imageUrl: 'https://firebasestorage.googleapis.com/v0/b/cms-menu-7b4a4.firebasestorage.app/o/businesses%2FHsuTZWhRVkT88a0WOztELGzJUhl1%2Fitems%2FdzBvL6BAbHaHtalYwT9H%2Fimage.jpg?alt=media&token=794e2b22-4c29-41dc-b453-b7297b012986'
+                },
+                {
+                    id: '0iIwa0UvixIgqwvwfWHD',
+                    name: 'hamburguesa simple',
+                    price: 10000,
+                    description: 'con queso solo',
+                    imageUrl: ''
+                }
+            ];
+
+            addLog('🚀 App initialized with menu items', 'info');
+
+            return (
+                <div className="container">
+                    {menuItems.map(item => (
+                        <MenuItem key={item.id} item={item} />
+                    ))}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useMenu, useCart } from './useMenu.js';
 import './MenuComponents.css';
 
@@ -32,48 +32,29 @@ function ImageWithFallback({ src, alt, className, placeholder = "🍽️" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  console.log(`🖼️ ImageWithFallback - Attempting to load:`, { 
-    src, 
-    alt, 
-    className,
-    hasValidSrc: !!src && src.length > 0,
-    srcType: typeof src
-  });
-
   const handleLoad = () => {
     setLoading(false);
     setError(false);
-    console.log(`✅ Image loaded successfully: ${src}`);
   };
 
-  const handleError = (errorEvent) => {
+  const handleError = () => {
     setLoading(false);
     setError(true);
-    console.error(`❌ Error loading image: ${src}`, {
-      error: errorEvent,
-      errorType: errorEvent.type,
-      target: errorEvent.target,
-      naturalWidth: errorEvent.target?.naturalWidth,
-      naturalHeight: errorEvent.target?.naturalHeight,
-      currentSrc: errorEvent.target?.currentSrc,
-      complete: errorEvent.target?.complete
-    });
+    console.warn(`Error al cargar imagen: ${src}`);
   };
 
-  // Si no hay src válido, mostrar placeholder directamente
-  if (!src || src.length === 0) {
-    console.log(`❌ No valid src provided for ${alt}, showing placeholder`);
+  // Si no hay src, mostrar placeholder directamente
+  if (!src) {
     return <div className={`${className} item-placeholder`}>{placeholder}</div>;
   }
 
   // Si hubo error, mostrar placeholder
   if (error) {
-    console.log(`❌ Image error occurred for ${alt}, showing placeholder`);
     return <div className={`${className} item-placeholder`}>{placeholder}</div>;
   }
 
   return (
-    <div className={className}>
+    <div className={className} style={{ position: 'relative' }}>
       {loading && <div className="item-placeholder">🔄</div>}
       <img 
         src={src} 
@@ -81,6 +62,8 @@ function ImageWithFallback({ src, alt, className, placeholder = "🍽️" }) {
         onLoad={handleLoad}
         onError={handleError}
         loading="lazy"
+        crossOrigin="anonymous"
+        referrerPolicy="no-referrer"
         style={{ 
           display: loading ? 'none' : 'block',
           width: '100%',
@@ -151,15 +134,13 @@ export function MenuItem({
   showDescription = true,
   terminology = {}
 }) {
-  const imageSource = item.imageUrl || item.image;
-
   return (
     <div className="menu-item">
       {showImage && (
         <ImageWithFallback 
-          src={imageSource} 
+          src={item.imageUrl || item.image} 
           alt={item.name} 
-          className="cms-item-image"
+          className="item-image"
         />
       )}
       

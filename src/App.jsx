@@ -10,20 +10,22 @@ import { MENU_CONFIG } from './cms-menu/config.js'
 import Cart from './components/checkout/Cart'
 import './styles/index.css'
 
-// Temporary Firebase Storage debug
-import './cms-menu/storage-test.js'
-
 function App() {
   const { isConnected, error } = useMenu();
   const [showCart, setShowCart] = useState(false);
   
   // Get cart data from the CMS integration
-  const { cart, addToCart, updateQuantity, removeFromCart, clearCart, total, itemCount, firebaseManager } = useMenuIntegration(MENU_CONFIG, { enabled: true });
+  const { cart, addToCart, updateQuantity, removeFromCart, clearCart, total, itemCount, firebaseManager, cartTotal, cartCount } = useMenuIntegration(MENU_CONFIG, { enabled: true });
+
+  // Use fallback values to prevent undefined errors
+  const safeTotal = total || cartTotal || 0;
+  const safeItemCount = itemCount || cartCount || 0;
 
   // Debug cart changes
   useEffect(() => {
-    console.log('🏠 App.jsx - Cart updated:', cart, 'Total items:', itemCount);
-  }, [cart, itemCount]);
+    console.log('🏠 App.jsx - Cart updated:', cart, 'Total items:', safeItemCount, 'Total:', safeTotal);
+    console.log('🏠 App.jsx - Firebase manager available:', !!firebaseManager);
+  }, [cart, safeItemCount, safeTotal, firebaseManager]);
 
   const handleCartClick = () => {
     setShowCart(true);
@@ -64,14 +66,14 @@ function App() {
         updateQuantity={updateQuantity}
         removeFromCart={removeFromCart}
         clearCart={clearCart}
-        total={total}
-        itemCount={itemCount}
+        total={safeTotal}
+        itemCount={safeItemCount}
         firebaseManager={firebaseManager}
       />
       <Location />
       <Contact />
       <Footer />
-      <Navbar onCartClick={handleCartClick} itemCount={itemCount} />
+      <Navbar onCartClick={handleCartClick} itemCount={safeItemCount} />
       
       {showCart && (
         <div className="cart-overlay" onClick={(e) => e.target.classList.contains('cart-overlay') && setShowCart(false)}>
@@ -80,7 +82,7 @@ function App() {
             updateQuantity={updateQuantity}
             removeFromCart={removeFromCart}
             clearCart={clearCart}
-            total={total}
+            total={safeTotal}
             onClose={() => setShowCart(false)}
             firebaseManager={firebaseManager}
           />
