@@ -6,11 +6,6 @@ const Navbar = ({ onCartClick, itemCount }) => {
   const [activeSection, setActiveSection] = useState('home');
   const [isVisible, setIsVisible] = useState(false);
 
-  // Debug itemCount changes
-  useEffect(() => {
-    console.log('🧭 Navbar - itemCount updated:', itemCount);
-  }, [itemCount]);
-
   useEffect(() => {
     const handleScroll = () => {
       const headerHeight = window.innerHeight;

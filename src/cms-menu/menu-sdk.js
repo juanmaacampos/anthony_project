@@ -42,17 +42,13 @@ export class MenuSDK {
   }
 
   async _resolveImageUrl(imagePath) {
-    console.log('🔍 Attempting to resolve image path:', imagePath);
-    
     if (!imagePath) {
-      console.log('❌ No image path provided');
       return null;
     }
     
     try {
       // Si ya es una URL completa, devolverla tal como está
       if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-        console.log('✅ Already a complete URL:', imagePath);
         return imagePath;
       }
       
@@ -63,28 +59,15 @@ export class MenuSDK {
         return null;
       }
       
-      console.log('🔧 Creating Firebase Storage reference for path:', imagePath);
-      
       // Crear referencia al archivo en Firebase Storage
       const imageRef = ref(this.storage, imagePath);
-      console.log('📁 Storage reference created:', imageRef.fullPath);
-      
       const downloadURL = await getDownloadURL(imageRef);
-      
-      console.log('🖼️ Image URL resolved successfully:', { 
-        originalPath: imagePath, 
-        resolvedURL: downloadURL,
-        bucket: imageRef.bucket,
-        fullPath: imageRef.fullPath
-      });
       
       return downloadURL;
     } catch (error) {
       console.error('❌ Failed to resolve image URL:', {
         path: imagePath,
-        error: error.message,
-        code: error.code,
-        fullError: error
+        error: error.message
       });
       return null;
     }
@@ -212,21 +195,17 @@ export class MenuSDK {
           let imageSource = itemData.imageUrl || itemData.image;
           
           if (imageSource) {
-            console.log(`🖼️ Found image for ${itemData.name}:`, imageSource);
             try {
               const resolvedUrl = await this._resolveImageUrl(imageSource);
-              console.log(`✅ Image resolved for ${itemData.name}:`, resolvedUrl);
-              
               // Establecer tanto image como imageUrl para compatibilidad
               itemData.image = resolvedUrl;
               itemData.imageUrl = resolvedUrl;
             } catch (imageError) {
-              console.warn(`❌ Error resolving image for ${itemData.name}:`, imageError.message);
+              console.warn(`⚠️ Could not resolve image for item ${itemData.name}:`, imageError.message);
               itemData.image = null;
               itemData.imageUrl = null;
             }
           } else {
-            console.log(`❌ No image found for item: ${itemData.name}`);
             itemData.image = null;
             itemData.imageUrl = null;
           }

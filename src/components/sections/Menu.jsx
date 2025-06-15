@@ -19,11 +19,6 @@ const Menu = ({ cart, addToCart, updateQuantity, removeFromCart, clearCart, tota
   const menuSDK = menuSDKManager.getInstance(MENU_CONFIG.firebaseConfig, MENU_CONFIG.businessId || MENU_CONFIG.restaurantId);
   const { business, restaurant, menu, loading, error, terminology } = useMenuWithTerminology(menuSDK);
 
-  // Debug cart changes
-  useEffect(() => {
-    console.log('🛒 Menu - Cart updated:', cart, 'Total items:', itemCount || 0, 'Total:', total || 0);
-  }, [cart, itemCount, total]);
-
   useEffect(() => {
     gsap.fromTo(titleRef.current,
       { opacity: 0, y: 50 },

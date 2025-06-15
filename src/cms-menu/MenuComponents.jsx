@@ -32,43 +32,23 @@ function ImageWithFallback({ src, alt, className, placeholder = "🍽️" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  console.log(`🖼️ ImageWithFallback - Attempting to load:`, { 
-    src, 
-    alt, 
-    className,
-    hasValidSrc: !!src && src.length > 0,
-    srcType: typeof src
-  });
-
   const handleLoad = () => {
     setLoading(false);
     setError(false);
-    console.log(`✅ Image loaded successfully: ${src}`);
   };
 
-  const handleError = (errorEvent) => {
+  const handleError = () => {
     setLoading(false);
     setError(true);
-    console.error(`❌ Error loading image: ${src}`, {
-      error: errorEvent,
-      errorType: errorEvent.type,
-      target: errorEvent.target,
-      naturalWidth: errorEvent.target?.naturalWidth,
-      naturalHeight: errorEvent.target?.naturalHeight,
-      currentSrc: errorEvent.target?.currentSrc,
-      complete: errorEvent.target?.complete
-    });
   };
 
   // Si no hay src válido, mostrar placeholder directamente
   if (!src || src.length === 0) {
-    console.log(`❌ No valid src provided for ${alt}, showing placeholder`);
     return <div className={`${className} item-placeholder`}>{placeholder}</div>;
   }
 
   // Si hubo error, mostrar placeholder
   if (error) {
-    console.log(`❌ Image error occurred for ${alt}, showing placeholder`);
     return <div className={`${className} item-placeholder`}>{placeholder}</div>;
   }
 

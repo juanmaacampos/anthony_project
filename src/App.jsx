@@ -21,12 +21,6 @@ function App() {
   const safeTotal = total || cartTotal || 0;
   const safeItemCount = itemCount || cartCount || 0;
 
-  // Debug cart changes
-  useEffect(() => {
-    console.log('🏠 App.jsx - Cart updated:', cart, 'Total items:', safeItemCount, 'Total:', safeTotal);
-    console.log('🏠 App.jsx - Firebase manager available:', !!firebaseManager);
-  }, [cart, safeItemCount, safeTotal, firebaseManager]);
-
   const handleCartClick = () => {
     setShowCart(true);
   };
